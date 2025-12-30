@@ -1,0 +1,341 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// AUTHENTICATION & USERS
+// ============================================
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?   // For email/password auth
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Preferences (theme, notifications, etc.)
+  preferences   Json?
+
+  // Relations
+  accounts      Account[]
+  sessions      Session[]
+  habits        Habit[]
+  journalEntries JournalEntry[]
+  tasks         Task[]
+  workspaceMemberships WorkspaceMember[]
+  consents      UserConsent[]
+  aiConversations AiConversation[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ============================================
+// USER CONSENT MANAGEMENT
+// ============================================
+
+model UserConsent {
+  id          String   @id @default(cuid())
+  userId      String
+  consentType String   // "ai_data_access", "analytics", etc.
+  granted     Boolean  @default(false)
+  grantedAt   DateTime @default(now())
+  revokedAt   DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, consentType])
+  @@map("user_consents")
+}
+
+// ============================================
+// HABIT TRACKING
+// ============================================
+
+model Habit {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  category    String?  // "health", "productivity", "learning", etc.
+  frequency   String   @default("daily") // "daily", "weekly", "custom"
+  targetDays  Json?    // For custom frequency: [1,3,5] = Mon, Wed, Fri
+  isActive    Boolean  @default(true)
+  color       String?  // For UI customization
+  icon        String?  // Icon identifier
+  settings    Json?    // Additional settings
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  completions HabitCompletion[]
+  analytics   HabitAnalytics[]
+
+  @@map("habits")
+}
+
+model HabitCompletion {
+  id             String   @id @default(cuid())
+  habitId        String
+  completionDate DateTime @db.Date
+  status         String   @default("completed") // "completed", "skipped", "failed"
+  notes          String?
+  createdAt      DateTime @default(now())
+
+  habit Habit @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  @@unique([habitId, completionDate])
+  @@map("habit_completions")
+}
+
+model HabitAnalytics {
+  id            String   @id @default(cuid())
+  habitId       String
+  weekStart     DateTime @db.Date
+  completionRate Float
+  streak        Int      @default(0)
+  totalCompletions Int   @default(0)
+  createdAt     DateTime @default(now())
+
+  habit Habit @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  @@unique([habitId, weekStart])
+  @@map("habit_analytics")
+}
+
+// ============================================
+// JOURNAL & DIARY
+// ============================================
+
+model JournalEntry {
+  id              String   @id @default(cuid())
+  userId          String
+  entryDate       DateTime @db.Date
+  mainContent     String   @db.Text
+  voiceTranscript String?  @db.Text
+  mood            String?  // "happy", "sad", "neutral", etc.
+  isEncrypted     Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sections JournalSection[]
+
+  @@unique([userId, entryDate])
+  @@map("journal_entries")
+}
+
+model JournalSection {
+  id        String   @id @default(cuid())
+  entryId   String
+  sectionType String // "mistakes", "good_things", "planner"
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+
+  entry JournalEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+
+  @@map("journal_sections")
+}
+
+// ============================================
+// TASK & PLANNING
+// ============================================
+
+model Task {
+  id              String    @id @default(cuid())
+  userId          String
+  title           String
+  description     String?   @db.Text
+  dueDate         DateTime? @db.Date
+  priority        String    @default("medium") // "low", "medium", "high"
+  status          String    @default("pending") // "pending", "in_progress", "completed", "cancelled"
+  category        String?
+  fromPlannerId   String?   // ID of journal section if auto-created from planner
+  isRecurring     Boolean   @default(false)
+  recurringPattern Json?    // For recurring tasks
+  completedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reminders TaskReminder[]
+
+  @@map("tasks")
+}
+
+model TaskReminder {
+  id         String   @id @default(cuid())
+  taskId     String
+  reminderAt DateTime
+  type       String   @default("notification") // "notification", "email", "sms"
+  sent       Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@map("task_reminders")
+}
+
+// ============================================
+// COLLABORATIVE FEATURES
+// ============================================
+
+model Workspace {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  type        String   @default("team") // "team", "hr", "company"
+  settings    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members      WorkspaceMember[]
+  sharedHabits SharedHabit[]
+
+  @@map("workspaces")
+}
+
+model WorkspaceMember {
+  id          String   @id @default(cuid())
+  workspaceId String
+  userId      String
+  role        String   @default("member") // "owner", "admin", "member", "viewer"
+  joinedAt    DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+  @@map("workspace_members")
+}
+
+model SharedHabit {
+  id          String   @id @default(cuid())
+  workspaceId String
+  name        String
+  description String?
+  frequency   String   @default("daily")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace   Workspace             @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  completions SharedHabitCompletion[]
+
+  @@map("shared_habits")
+}
+
+model SharedHabitCompletion {
+  id             String   @id @default(cuid())
+  sharedHabitId  String
+  userId         String
+  completionDate DateTime @db.Date
+  status         String   @default("completed")
+  notes          String?
+  createdAt      DateTime @default(now())
+
+  sharedHabit SharedHabit @relation(fields: [sharedHabitId], references: [id], onDelete: Cascade)
+
+  @@unique([sharedHabitId, userId, completionDate])
+  @@map("shared_habit_completions")
+}
+
+// ============================================
+// AI PERSONAL ASSISTANT
+// ============================================
+
+model AiConversation {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages AiMessage[]
+
+  @@map("ai_conversations")
+}
+
+model AiMessage {
+  id             String   @id @default(cuid())
+  conversationId String
+  role           String   // "user", "assistant", "system"
+  content        String   @db.Text
+  metadata       Json?    // For storing tool calls, function results, etc.
+  createdAt      DateTime @default(now())
+
+  conversation AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@map("ai_messages")
+}
+
+// ============================================
+// EVENTS & CALENDAR
+// ============================================
+
+model Event {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  description String?  @db.Text
+  startTime   DateTime
+  endTime     DateTime
+  location    String?
+  isAllDay    Boolean  @default(false)
+  category    String?
+  color       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("events")
+}
