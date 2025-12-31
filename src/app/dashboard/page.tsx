@@ -3,10 +3,16 @@
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
+import Link from 'next/link'
+import { TodayHabits } from '@/components/habits/TodayHabits'
+import { api } from '@/lib/trpc/client'
 
 export default function DashboardPage() {
     const { data: session, status } = useSession()
     const router = useRouter()
+    const { data: habits } = api.habit.getAll.useQuery(undefined, {
+        enabled: !!session,
+    })
 
     useEffect(() => {
         if (status === 'unauthenticated') {
@@ -28,6 +34,8 @@ export default function DashboardPage() {
     if (!session) {
         return null
     }
+
+    const habitCount = habits?.length || 0
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -69,7 +77,7 @@ export default function DashboardPage() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Habits</p>
-                                <p className="text-3xl font-bold text-gray-900 dark:text-white">0</p>
+                                <p className="text-3xl font-bold text-gray-900 dark:text-white">{habitCount}</p>
                             </div>
                             <div className="text-4xl">✅</div>
                         </div>
@@ -106,17 +114,24 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
+                {/* Today's Habits Widget */}
+                <div className="mb-8">
+                    <TodayHabits />
+                </div>
+
                 {/* Quick Actions */}
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8">
                     <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
                         Quick Actions
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <button className="p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
-                            <div className="text-3xl mb-2">➕</div>
-                            <p className="font-medium text-gray-900 dark:text-white">Add Habit</p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">Start tracking a new habit</p>
-                        </button>
+                        <Link href="/dashboard/habits">
+                            <button className="w-full p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+                                <div className="text-3xl mb-2">➕</div>
+                                <p className="font-medium text-gray-900 dark:text-white">Add Habit</p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">Start tracking a new habit</p>
+                            </button>
+                        </Link>
 
                         <button className="p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors">
                             <div className="text-3xl mb-2">📝</div>
@@ -130,15 +145,6 @@ export default function DashboardPage() {
                             <p className="text-sm text-gray-600 dark:text-gray-400">Plan your next action</p>
                         </button>
                     </div>
-                </div>
-
-                {/* Coming Soon Notice */}
-                <div className="mt-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl p-8 text-white">
-                    <h3 className="text-2xl font-bold mb-2">🚧 Dashboard Under Construction</h3>
-                    <p className="text-blue-100">
-                        Your personalized dashboard with habits, journal entries, and tasks is being built.
-                        Full features coming in the next checkpoint!
-                    </p>
                 </div>
             </div>
         </div>

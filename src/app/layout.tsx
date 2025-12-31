@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { TRPCProvider } from "@/lib/trpc/client";
 import { Providers } from "@/components/providers/SessionProvider";
+import { Toaster } from "@/components/ui/toaster";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,6 +22,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <Providers>
           <TRPCProvider>{children}</TRPCProvider>
+          <Toaster />
         </Providers>
       </body>
     </html>

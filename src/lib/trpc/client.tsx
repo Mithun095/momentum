@@ -10,14 +10,17 @@ import { type AppRouter } from '@/server/api/root'
 
 export const trpc = createTRPCReact<AppRouter>()
 
+// Export as 'api' for convenience
+export const api = trpc
+
 export function TRPCProvider({ children }: { children: React.ReactNode }) {
     const [queryClient] = useState(() => new QueryClient())
     const [trpcClient] = useState(() =>
         trpc.createClient({
-            transformer: superjson,
             links: [
                 httpBatchLink({
                     url: '/api/trpc',
+                    transformer: superjson,
                 }),
             ],
         })

@@ -1,11 +1,11 @@
-import { type AuthOptions } from 'next-auth'
+import type { NextAuthConfig } from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { PrismaAdapter } from '@auth/prisma-adapter'
 import { db } from '@/lib/db'
 import { verifyPassword } from '@/lib/encryption'
 
-export const authOptions: AuthOptions = {
+export const authOptions: NextAuthConfig = {
     adapter: PrismaAdapter(db) as any,
     session: {
         strategy: 'jwt',
@@ -31,14 +31,14 @@ export const authOptions: AuthOptions = {
                 }
 
                 const user = await db.user.findUnique({
-                    where: { email: credentials.email },
+                    where: { email: credentials.email as string },
                 })
 
                 if (!user || !user.password) {
                     throw new Error('Invalid credentials')
                 }
 
-                const isValid = await verifyPassword(credentials.password, user.password)
+                const isValid = await verifyPassword(credentials.password as string, user.password)
 
                 if (!isValid) {
                     throw new Error('Invalid credentials')
@@ -55,11 +55,14 @@ export const authOptions: AuthOptions = {
     ],
     callbacks: {
         async session({ token, session }) {
-            if (token) {
-                session.user.id = token.id
-                session.user.name = token.name
-                session.user.email = token.email
-                session.user.image = token.picture
+            if (token && session.user) {
+                session.user = {
+                    ...session.user,
+                    id: token.id as string,
+                    name: (token.name as string | null | undefined),
+                    email: (token.email as string | null | undefined),
+                    image: (token.picture as string | null | undefined),
+                }
             }
 
             return session

@@ -107,4 +107,35 @@ export const habitRouter = createTRPCRouter({
                 orderBy: { completionDate: 'asc' },
             })
         }),
+
+    // Get ALL completions for user's habits in a date range
+    getAllCompletions: protectedProcedure
+        .input(
+            z.object({
+                startDate: z.date(),
+                endDate: z.date(),
+            })
+        )
+        .query(async ({ ctx, input }) => {
+            const userId = ctx.session.user.id
+
+            // Get all user's habit IDs
+            const userHabits = await ctx.db.habit.findMany({
+                where: { userId, isActive: true },
+                select: { id: true },
+            })
+
+            const habitIds = userHabits.map(h => h.id)
+
+            return await ctx.db.habitCompletion.findMany({
+                where: {
+                    habitId: { in: habitIds },
+                    completionDate: {
+                        gte: input.startDate,
+                        lte: input.endDate,
+                    },
+                },
+                orderBy: { completionDate: 'asc' },
+            })
+        }),
 })
