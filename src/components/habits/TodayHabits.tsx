@@ -21,30 +21,44 @@ export function TodayHabits({ className }: TodayHabitsProps) {
     const { toast } = useToast()
     const { data: habits, isLoading } = api.habit.getAll.useQuery()
 
-    // Get completions for the last 30 days to catch today's completions
-    const endDate = new Date()
-    const startDate = new Date()
-    startDate.setDate(startDate.getDate() - 30)
+    // Get completions for the last 30 days
+    // Use useMemo to prevent unstable query keys (dates changing every render)
+    const { startDate, endDate } = useMemo(() => {
+        const end = new Date()
+        end.setHours(23, 59, 59, 999)
+
+        const start = new Date()
+        start.setDate(start.getDate() - 30)
+        start.setHours(0, 0, 0, 0)
+
+        return { startDate: start, endDate: end }
+    }, [])
 
     const { data: completions } = api.habit.getAllCompletions.useQuery(
         {
             startDate,
             endDate,
         },
-        { enabled: !!habits && habits.length > 0 }
+        {
+            enabled: !!habits && habits.length > 0,
+            refetchOnWindowFocus: false
+        }
     )
     const utils = api.useUtils()
 
     const markComplete = api.habit.markComplete.useMutation({
-        onSuccess: () => {
+        onSuccess: (_data, variables) => {
+            console.log('Mutation successful for habit:', variables.habitId)
             toast({
                 title: 'Habit completed!',
                 description: 'Great job! Keep up the streak! 🔥',
             })
-            utils.habit.getAll.invalidate()
-            utils.habit.getAllCompletions.invalidate()
+            // Void the promise to fix floating promise lint
+            void utils.habit.getAll.invalidate()
+            void utils.habit.getAllCompletions.invalidate()
         },
         onError: (error) => {
+            console.error('Mutation failed:', error)
             toast({
                 title: 'Error',
                 description: error.message || 'Failed to mark habit',
@@ -54,21 +68,33 @@ export function TodayHabits({ className }: TodayHabitsProps) {
     })
 
     const handleMarkStatus = (habitId: string, status: 'completed' | 'skipped' | 'failed') => {
+        console.log('Marking status:', habitId, status)
         markComplete.mutate({
             habitId,
-            date: new Date(),
+            date: new Date(), // This captures local time
             status,
         })
     }
 
     // Calculate today's completions
     const todayCompletions = useMemo(() => {
-        if (!completions || !habits) return { completed: [], count: 0 }
+        if (!completions || !habits) {
+            console.log('No completions or habits loaded')
+            return { completed: [], count: 0 }
+        }
 
+        // Get today in YYYY-MM-DD format based on local time
         const today = format(new Date(), 'yyyy-MM-dd')
+
+        console.log('Comparing completions against today:', today)
+        console.log('Raw completions:', completions)
+
         const todayCompleted = completions.filter((c) => {
+            // Ensure we're comparing date parts only
             const completionDate = format(new Date(c.completionDate), 'yyyy-MM-dd')
-            return completionDate === today && c.status === 'completed'
+            const isMatch = completionDate === today && c.status === 'completed'
+            if (isMatch) console.log('Found match for:', c.habitId)
+            return isMatch
         })
 
         return {
