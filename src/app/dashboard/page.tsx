@@ -6,11 +6,18 @@ import { useEffect } from 'react'
 import Link from 'next/link'
 import { TodayHabits } from '@/components/habits/TodayHabits'
 import { api } from '@/lib/trpc/client'
+import { Badge } from '@/components/ui/badge'
 
 export default function DashboardPage() {
     const { data: session, status } = useSession()
     const router = useRouter()
     const { data: habits } = api.habit.getAll.useQuery(undefined, {
+        enabled: !!session,
+    })
+    const { data: taskStats } = api.task.getStats.useQuery(undefined, {
+        enabled: !!session,
+    })
+    const { data: todayTasks } = api.task.getToday.useQuery(undefined, {
         enabled: !!session,
     })
 
@@ -73,15 +80,17 @@ export default function DashboardPage() {
 
                 {/* Quick Stats */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Habits</p>
-                                <p className="text-3xl font-bold text-gray-900 dark:text-white">{habitCount}</p>
+                    <Link href="/dashboard/habits">
+                        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow cursor-pointer">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Habits</p>
+                                    <p className="text-3xl font-bold text-gray-900 dark:text-white">{habitCount}</p>
+                                </div>
+                                <div className="text-4xl">✅</div>
                             </div>
-                            <div className="text-4xl">✅</div>
                         </div>
-                    </div>
+                    </Link>
 
                     <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
                         <div className="flex items-center justify-between">
@@ -93,26 +102,79 @@ export default function DashboardPage() {
                         </div>
                     </div>
 
-                    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Journal Entries</p>
-                                <p className="text-3xl font-bold text-gray-900 dark:text-white">0</p>
+                    <Link href="/dashboard/journal">
+                        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow cursor-pointer">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Journal Entries</p>
+                                    <p className="text-3xl font-bold text-gray-900 dark:text-white">0</p>
+                                </div>
+                                <div className="text-4xl">📔</div>
                             </div>
-                            <div className="text-4xl">📔</div>
                         </div>
-                    </div>
+                    </Link>
 
-                    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Tasks Today</p>
-                                <p className="text-3xl font-bold text-gray-900 dark:text-white">0</p>
+                    <Link href="/dashboard/tasks">
+                        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow cursor-pointer">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Tasks Today</p>
+                                    <div className="flex items-center gap-2">
+                                        <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                                            {taskStats?.todayTasks || 0}
+                                        </p>
+                                        {taskStats?.overdue && taskStats.overdue > 0 && (
+                                            <Badge className="bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300">
+                                                {taskStats.overdue} overdue
+                                            </Badge>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="text-4xl">📋</div>
                             </div>
-                            <div className="text-4xl">📋</div>
+                        </div>
+                    </Link>
+                </div>
+
+                {/* Today's Tasks Widget */}
+                {todayTasks && todayTasks.length > 0 && (
+                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-8">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                                Today's Tasks
+                            </h3>
+                            <Link href="/dashboard/tasks" className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400">
+                                View all →
+                            </Link>
+                        </div>
+                        <div className="space-y-3">
+                            {todayTasks.slice(0, 5).map((task) => (
+                                <div
+                                    key={task.id}
+                                    className={`flex items-center gap-3 p-3 rounded-lg border ${task.status === 'completed'
+                                            ? 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600'
+                                            : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+                                        }`}
+                                >
+                                    <div className={`w-4 h-4 rounded-full border-2 ${task.status === 'completed'
+                                            ? 'bg-green-500 border-green-500'
+                                            : task.priority === 'high'
+                                                ? 'border-red-500'
+                                                : task.priority === 'medium'
+                                                    ? 'border-yellow-500'
+                                                    : 'border-gray-400'
+                                        }`} />
+                                    <span className={`flex-1 ${task.status === 'completed'
+                                            ? 'line-through text-gray-500 dark:text-gray-400'
+                                            : 'text-gray-900 dark:text-gray-100'
+                                        }`}>
+                                        {task.title}
+                                    </span>
+                                </div>
+                            ))}
                         </div>
                     </div>
-                </div>
+                )}
 
                 {/* Today's Habits Widget */}
                 <div className="mb-8">
@@ -141,14 +203,17 @@ export default function DashboardPage() {
                             </button>
                         </Link>
 
-                        <button className="p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                            <div className="text-3xl mb-2">✓</div>
-                            <p className="font-medium text-gray-900 dark:text-white">Add Task</p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">Plan your next action</p>
-                        </button>
+                        <Link href="/dashboard/tasks">
+                            <button className="w-full p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                                <div className="text-3xl mb-2">✓</div>
+                                <p className="font-medium text-gray-900 dark:text-white">Add Task</p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">Plan your next action</p>
+                            </button>
+                        </Link>
                     </div>
                 </div>
             </div>
         </div>
     )
 }
+

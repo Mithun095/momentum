@@ -13,8 +13,8 @@
 | 1 | Project Setup & Architecture | ✅ Complete |
 | 2 | Core Infrastructure | ✅ Complete |
 | 3 | Habit Tracking System | ✅ Complete |
-| 4 | Journal/Diary System | 🔄 In Progress |
-| 5 | Task & Planning System | ⏳ Pending |
+| 4 | Journal/Diary System | ✅ Complete |
+| 5 | Task & Planning System | ✅ Complete |
 | 6 | Collaborative Features | ⏳ Pending |
 | 7 | AI Personal Assistant | ⏳ Pending |
 | 8 | Visualization & Analytics | ⏳ Pending |
@@ -64,21 +64,24 @@
 
 ---
 
-## Phase 4: Journal/Diary System 🔄
+## Phase 4: Journal/Diary System ✅
 
 - [x] Daily journal entries (tRPC router + pages)
-- [ ] Voice-to-text integration
+- [x] Voice-to-text integration (Web Speech API)
 - [x] Rich text editor (`JournalEditor.tsx` - textarea-based)
 - [x] Optional sections (`JournalSections.tsx`)
   - [x] Mistakes & Lessons
   - [x] Good Things
   - [x] Tomorrow's Planner (auto-creates tasks)
-- [ ] Media attachments support
+- [x] Media attachments support (image upload)
 - [x] Search and filter functionality
 
 **Components Created**:
 - `JournalEditor.tsx`, `MoodSelector.tsx`, `JournalSections.tsx`
-- `JournalEntryCard.tsx`
+- `JournalEntryCard.tsx`, `MediaAttachments.tsx`
+
+**Hooks Created**:
+- `useVoiceToText.ts` (Web Speech API integration)
 
 **Pages Created**:
 - `/dashboard/journal` (list view)
@@ -86,14 +89,28 @@
 
 ---
 
-## Phase 5: Task & Planning System ⏳
+## Phase 5: Task & Planning System ✅
 
-- [ ] Daily task management
+- [x] Daily task management (`/dashboard/tasks`)
 - [x] Tomorrow's planner → daily tasks automation (in journal router)
-- [ ] Task priorities and categories
-- [ ] Reminders and notifications
-- [ ] Calendar integration
-- [ ] Recurring tasks
+- [x] Task priorities and categories
+- [x] Task filtering (status, priority, category)
+- [x] Task search functionality
+- [x] Task stats dashboard
+- [ ] Reminders and notifications (future)
+- [ ] Calendar integration (future)
+- [ ] Recurring tasks (future)
+
+**Components Created**:
+- `TaskCard.tsx`, `CreateTaskModal.tsx`, `EditTaskModal.tsx`
+- `TaskFilters.tsx`
+
+**Constants Created**:
+- `taskCategories.ts` (priorities, categories, status definitions)
+
+**Router Methods**:
+- `getAll`, `getToday`, `getOverdue`, `getByDateRange`, `getStats`
+- `create`, `update`, `toggleComplete`, `delete`
 
 **Schema Ready**: Task, TaskReminder models in Prisma
 
@@ -250,4 +267,6 @@ src/
 | Dec 30 | Foundation | Checkpoint 1 - Project setup |
 | Dec 30 | Auth UI | Checkpoint 2 - Authentication |
 | Dec 31 | Habits | Checkpoint 3 - Habit system |
-| Dec 31 | Journal | Checkpoint 4 - Journal system (in progress) |
+| Dec 31 | Journal | Checkpoint 4 - Journal system (complete) |
+| Dec 31 | Tasks | Checkpoint 5 - Task & Planning system |
+

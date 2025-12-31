@@ -1,17 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Edit, Trash2, Check, X } from 'lucide-react'
+import { Edit, Check } from 'lucide-react'
 import { getCategoryInfo } from '@/lib/constants/habitCategories'
 import { getColorClasses } from '@/lib/constants/habitColors'
 import { EditHabitModal } from './EditHabitModal'
 import { api } from '@/lib/trpc/client'
 import { useToast } from '@/hooks/use-toast'
-import { format } from 'date-fns'
+import { format, startOfDay, endOfDay } from 'date-fns'
 
 interface Habit {
     id: string
@@ -35,14 +35,43 @@ export function HabitList({ habits, isLoading }: HabitListProps) {
     const { toast } = useToast()
     const utils = api.useUtils()
 
+    // Get date range for today (stable across renders)
+    const { startDate, endDate } = useMemo(() => {
+        const today = new Date()
+        return {
+            startDate: startOfDay(today),
+            endDate: endOfDay(today),
+        }
+    }, [])
+
+    // Fetch today's completions
+    const { data: completions } = api.habit.getAllCompletions.useQuery(
+        { startDate, endDate },
+        { enabled: !!habits && habits.length > 0 }
+    )
+
+    // Map of habitId -> completed today
+    const completedToday = useMemo(() => {
+        if (!completions) return new Set<string>()
+        const today = format(new Date(), 'yyyy-MM-dd')
+        return new Set(
+            completions
+                .filter((c) => {
+                    const completionDate = format(new Date(c.completionDate), 'yyyy-MM-dd')
+                    return completionDate === today && c.status === 'completed'
+                })
+                .map((c) => c.habitId)
+        )
+    }, [completions])
+
     const markComplete = api.habit.markComplete.useMutation({
         onSuccess: () => {
             toast({
                 title: 'Habit completed!',
                 description: 'Great job! Keep up the streak! 🔥',
-                variant: 'success',
             })
-            utils.habit.getAll.invalidate()
+            void utils.habit.getAll.invalidate()
+            void utils.habit.getAllCompletions.invalidate()
         },
         onError: (error) => {
             toast({
@@ -101,15 +130,18 @@ export function HabitList({ habits, isLoading }: HabitListProps) {
                 {habits.map((habit) => {
                     const category = getCategoryInfo(habit.category || 'other')
                     const colorClasses = getColorClasses(habit.color || 'blue')
+                    const isCompleted = completedToday.has(habit.id)
 
                     return (
-                        <Card key={habit.id} className="group hover:shadow-lg transition-shadow">
+                        <Card key={habit.id} className={`group hover:shadow-lg transition-shadow ${isCompleted ? 'opacity-75' : ''}`}>
                             <CardHeader>
                                 <div className="flex items-start justify-between">
                                     <div className="flex items-center gap-2">
                                         <span className="text-2xl">{habit.icon || category.icon}</span>
                                         <div>
-                                            <CardTitle className="text-lg">{habit.name}</CardTitle>
+                                            <CardTitle className={`text-lg ${isCompleted ? 'line-through text-gray-500' : ''}`}>
+                                                {habit.name}
+                                            </CardTitle>
                                             {habit.description && (
                                                 <CardDescription className="mt-1">
                                                     {habit.description}
@@ -134,17 +166,28 @@ export function HabitList({ habits, isLoading }: HabitListProps) {
                                     <Badge variant="outline" className={colorClasses.border}>
                                         <span className={colorClasses.text}>{habit.frequency}</span>
                                     </Badge>
+                                    {isCompleted && (
+                                        <Badge className="bg-green-500 text-white">
+                                            ✓ Done
+                                        </Badge>
+                                    )}
                                 </div>
                             </CardHeader>
                             <CardContent>
-                                <Button
-                                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                                    onClick={() => handleQuickComplete(habit.id)}
-                                    disabled={markComplete.isPending}
-                                >
-                                    <Check className="h-4 w-4 mr-2" />
-                                    Complete for Today
-                                </Button>
+                                {isCompleted ? (
+                                    <div className="w-full py-2 text-center text-green-600 dark:text-green-400 font-medium">
+                                        ✅ Completed for Today
+                                    </div>
+                                ) : (
+                                    <Button
+                                        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                                        onClick={() => handleQuickComplete(habit.id)}
+                                        disabled={markComplete.isPending}
+                                    >
+                                        <Check className="h-4 w-4 mr-2" />
+                                        Complete for Today
+                                    </Button>
+                                )}
                             </CardContent>
                         </Card>
                     )
@@ -161,3 +204,4 @@ export function HabitList({ habits, isLoading }: HabitListProps) {
         </>
     )
 }
+

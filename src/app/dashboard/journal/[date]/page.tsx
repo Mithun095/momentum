@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { JournalEditor } from '@/components/journal/JournalEditor'
 import { MoodSelector } from '@/components/journal/MoodSelector'
 import { JournalSections } from '@/components/journal/JournalSections'
+import { MediaAttachments } from '@/components/journal/MediaAttachments'
 import { api } from '@/lib/trpc/client'
 import { useToast } from '@/hooks/use-toast'
 import { format, parse } from 'date-fns'
@@ -18,24 +19,34 @@ interface Section {
     content: string
 }
 
+interface Attachment {
+    id?: string
+    fileName: string
+    fileType: string
+    filePath: string
+    fileSize: number
+}
+
 export default function JournalEntryPage() {
     const router = useRouter()
     const params = useParams()
     const { toast } = useToast()
     const dateStr = params.date as string
 
-    // Parse date from URL
+    // Parse date from URL with validation
     const entryDate = parse(dateStr, 'yyyy-MM-dd', new Date())
+    const isValidDate = !isNaN(entryDate.getTime()) && dateStr.match(/^\d{4}-\d{2}-\d{2}$/)
 
     const [mainContent, setMainContent] = useState('')
     const [mood, setMood] = useState<string | null>(null)
     const [sections, setSections] = useState<Section[]>([])
+    const [attachments, setAttachments] = useState<Attachment[]>([])
     const [isCreating, setIsCreating] = useState(false)
 
     // Fetch existing entry for this date
     const { data: existingEntry, isLoading } = api.journal.getByDate.useQuery(
         { date: entryDate },
-        { enabled: !!dateStr }
+        { enabled: !!dateStr && !!isValidDate }
     )
 
     const utils = api.useUtils()
@@ -91,6 +102,17 @@ export default function JournalEntryPage() {
                     }))
                 )
             }
+            if (existingEntry.attachments) {
+                setAttachments(
+                    existingEntry.attachments.map((a) => ({
+                        id: a.id,
+                        fileName: a.fileName,
+                        fileType: a.fileType,
+                        filePath: a.filePath,
+                        fileSize: a.fileSize,
+                    }))
+                )
+            }
         }
     }, [existingEntry])
 
@@ -129,6 +151,25 @@ export default function JournalEntryPage() {
                 mood: newMood,
             })
         }
+    }
+
+    // Invalid date check
+    if (!isValidDate) {
+        return (
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
+                <div className="max-w-3xl mx-auto text-center">
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                        Invalid Date
+                    </h1>
+                    <p className="text-gray-600 dark:text-gray-400 mb-6">
+                        The date format in the URL is invalid. Please use YYYY-MM-DD format.
+                    </p>
+                    <Button onClick={() => router.push('/dashboard/journal')}>
+                        Back to Journal
+                    </Button>
+                </div>
+            </div>
+        )
     }
 
     if (isLoading) {
@@ -184,6 +225,13 @@ export default function JournalEntryPage() {
                         initialContent={mainContent}
                         onSave={handleSave}
                         placeholder="How was your day? What's on your mind?"
+                    />
+
+                    {/* Media Attachments */}
+                    <MediaAttachments
+                        attachments={attachments}
+                        onChange={setAttachments}
+                        entryId={existingEntry?.id}
                     />
 
                     {/* Optional Sections */}

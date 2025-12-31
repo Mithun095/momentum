@@ -21,7 +21,7 @@ export const journalRouter = createTRPCRouter({
 
             return await ctx.db.journalEntry.findMany({
                 where,
-                include: { sections: true },
+                include: { sections: true, attachments: true },
                 orderBy: { entryDate: 'desc' },
             })
         }),
@@ -37,7 +37,7 @@ export const journalRouter = createTRPCRouter({
                         entryDate: input.date,
                     },
                 },
-                include: { sections: true },
+                include: { sections: true, attachments: true },
             })
         }),
 
@@ -72,7 +72,7 @@ export const journalRouter = createTRPCRouter({
                         }
                         : undefined,
                 },
-                include: { sections: true },
+                include: { sections: true, attachments: true },
             })
 
             // If there's a planner section, create tasks for tomorrow
@@ -110,10 +110,67 @@ export const journalRouter = createTRPCRouter({
             })
         )
         .mutation(async ({ ctx, input }) => {
+            const userId = ctx.session.user.id
             const { id, ...data } = input
+
+            // Verify ownership
+            const entry = await ctx.db.journalEntry.findFirst({
+                where: { id, userId },
+            })
+            if (!entry) {
+                throw new Error('Journal entry not found')
+            }
+
             return await ctx.db.journalEntry.update({
                 where: { id },
                 data,
             })
         }),
+
+    addAttachment: protectedProcedure
+        .input(
+            z.object({
+                entryId: z.string(),
+                fileName: z.string(),
+                fileType: z.string(),
+                filePath: z.string(),
+                fileSize: z.number(),
+            })
+        )
+        .mutation(async ({ ctx, input }) => {
+            const userId = ctx.session.user.id
+
+            // Verify the user owns this journal entry
+            const entry = await ctx.db.journalEntry.findFirst({
+                where: { id: input.entryId, userId },
+            })
+            if (!entry) {
+                throw new Error('Journal entry not found')
+            }
+
+            return await ctx.db.journalAttachment.create({
+                data: input,
+            })
+        }),
+
+    removeAttachment: protectedProcedure
+        .input(z.object({ id: z.string() }))
+        .mutation(async ({ ctx, input }) => {
+            const userId = ctx.session.user.id
+
+            // Get attachment and verify user owns the parent entry
+            const attachment = await ctx.db.journalAttachment.findUnique({
+                where: { id: input.id },
+                include: { entry: true },
+            })
+
+            if (!attachment || attachment.entry.userId !== userId) {
+                throw new Error('Attachment not found')
+            }
+
+            return await ctx.db.journalAttachment.delete({
+                where: { id: input.id },
+            })
+        }),
 })
+

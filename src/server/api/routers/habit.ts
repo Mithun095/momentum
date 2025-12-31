@@ -41,7 +41,17 @@ export const habitRouter = createTRPCRouter({
             })
         )
         .mutation(async ({ ctx, input }) => {
+            const userId = ctx.session.user.id
             const { id, ...data } = input
+
+            // Verify ownership
+            const habit = await ctx.db.habit.findFirst({
+                where: { id, userId },
+            })
+            if (!habit) {
+                throw new Error('Habit not found')
+            }
+
             return await ctx.db.habit.update({
                 where: { id },
                 data,
@@ -51,6 +61,16 @@ export const habitRouter = createTRPCRouter({
     delete: protectedProcedure
         .input(z.object({ id: z.string() }))
         .mutation(async ({ ctx, input }) => {
+            const userId = ctx.session.user.id
+
+            // Verify ownership
+            const habit = await ctx.db.habit.findFirst({
+                where: { id: input.id, userId },
+            })
+            if (!habit) {
+                throw new Error('Habit not found')
+            }
+
             return await ctx.db.habit.update({
                 where: { id: input.id },
                 data: { isActive: false },
@@ -67,6 +87,16 @@ export const habitRouter = createTRPCRouter({
             })
         )
         .mutation(async ({ ctx, input }) => {
+            const userId = ctx.session.user.id
+
+            // Verify the user owns this habit
+            const habit = await ctx.db.habit.findFirst({
+                where: { id: input.habitId, userId },
+            })
+            if (!habit) {
+                throw new Error('Habit not found')
+            }
+
             return await ctx.db.habitCompletion.upsert({
                 where: {
                     habitId_completionDate: {

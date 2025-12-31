@@ -59,9 +59,9 @@ export const authOptions: NextAuthConfig = {
                 session.user = {
                     ...session.user,
                     id: token.id as string,
-                    name: (token.name as string | null | undefined),
-                    email: (token.email as string | null | undefined),
-                    image: (token.picture as string | null | undefined),
+                    name: (token.name as string | null) ?? null,
+                    email: (token.email as string) ?? '',
+                    image: (token.picture as string | null) ?? null,
                 }
             }
 
