@@ -48,7 +48,6 @@ export function TodayHabits({ className }: TodayHabitsProps) {
 
     const markComplete = api.habit.markComplete.useMutation({
         onSuccess: (_data, variables) => {
-            console.log('Mutation successful for habit:', variables.habitId)
             toast({
                 title: 'Habit completed!',
                 description: 'Great job! Keep up the streak! 🔥',
@@ -58,7 +57,6 @@ export function TodayHabits({ className }: TodayHabitsProps) {
             void utils.habit.getAllCompletions.invalidate()
         },
         onError: (error) => {
-            console.error('Mutation failed:', error)
             toast({
                 title: 'Error',
                 description: error.message || 'Failed to mark habit',
@@ -68,7 +66,6 @@ export function TodayHabits({ className }: TodayHabitsProps) {
     })
 
     const handleMarkStatus = (habitId: string, status: 'completed' | 'skipped' | 'failed') => {
-        console.log('Marking status:', habitId, status)
         markComplete.mutate({
             habitId,
             date: new Date(), // This captures local time
@@ -79,22 +76,16 @@ export function TodayHabits({ className }: TodayHabitsProps) {
     // Calculate today's completions
     const todayCompletions = useMemo(() => {
         if (!completions || !habits) {
-            console.log('No completions or habits loaded')
             return { completed: [], count: 0 }
         }
 
         // Get today in YYYY-MM-DD format based on local time
         const today = format(new Date(), 'yyyy-MM-dd')
 
-        console.log('Comparing completions against today:', today)
-        console.log('Raw completions:', completions)
-
         const todayCompleted = completions.filter((c) => {
             // Ensure we're comparing date parts only
             const completionDate = format(new Date(c.completionDate), 'yyyy-MM-dd')
-            const isMatch = completionDate === today && c.status === 'completed'
-            if (isMatch) console.log('Found match for:', c.habitId)
-            return isMatch
+            return completionDate === today && c.status === 'completed'
         })
 
         return {
