@@ -126,20 +126,22 @@ export default function DashboardPage() {
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <Link href="/dashboard/habits">
-                            <button className="w-full p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+                            <button className="w-full p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                                 <div className="text-3xl mb-2">➕</div>
                                 <p className="font-medium text-gray-900 dark:text-white">Add Habit</p>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">Start tracking a new habit</p>
                             </button>
                         </Link>
 
-                        <button className="p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors">
-                            <div className="text-3xl mb-2">📝</div>
-                            <p className="font-medium text-gray-900 dark:text-white">Write Journal</p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">Capture your thoughts</p>
-                        </button>
+                        <Link href={`/dashboard/journal/${new Date().toISOString().split('T')[0]}`}>
+                            <button className="w-full p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                                <div className="text-3xl mb-2">📝</div>
+                                <p className="font-medium text-gray-900 dark:text-white">Write Journal</p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">Capture your thoughts</p>
+                            </button>
+                        </Link>
 
-                        <button className="p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors">
+                        <button className="p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                             <div className="text-3xl mb-2">✓</div>
                             <p className="font-medium text-gray-900 dark:text-white">Add Task</p>
                             <p className="text-sm text-gray-600 dark:text-gray-400">Plan your next action</p>
