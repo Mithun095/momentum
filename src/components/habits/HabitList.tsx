@@ -50,6 +50,11 @@ export function HabitList({ habits, isLoading }: HabitListProps) {
         { enabled: !!habits && habits.length > 0 }
     )
 
+    // Fetch stats
+    const { data: stats } = api.habit.getStats.useQuery(undefined, {
+        enabled: !!habits && habits.length > 0
+    })
+
     // Map of habitId -> completed today
     const completedToday = useMemo(() => {
         if (!completions) return new Set<string>()
@@ -72,6 +77,7 @@ export function HabitList({ habits, isLoading }: HabitListProps) {
             })
             void utils.habit.getAll.invalidate()
             void utils.habit.getAllCompletions.invalidate()
+            void utils.habit.getStats.invalidate()
         },
         onError: (error) => {
             toast({
@@ -171,6 +177,21 @@ export function HabitList({ habits, isLoading }: HabitListProps) {
                                             ✓ Done
                                         </Badge>
                                     )}
+                                </div>
+                                {/* Stats Display */}
+                                <div className="flex gap-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
+                                    <div className="flex items-center gap-1">
+                                        <span>🔥 Streak:</span>
+                                        <span className="font-medium text-gray-900 dark:text-gray-200">
+                                            {stats?.[habit.id]?.streak || 0}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                        <span>Total:</span>
+                                        <span className="font-medium text-gray-900 dark:text-gray-200">
+                                            {stats?.[habit.id]?.totalCompletions || 0}
+                                        </span>
+                                    </div>
                                 </div>
                             </CardHeader>
                             <CardContent>

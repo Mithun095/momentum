@@ -1,33 +1,45 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { signIn } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import Link from 'next/link'
-import { hashPassword } from '@/lib/encryption'
 
 export default function SignUpPage() {
     const router = useRouter()
-    const [name, setName] = useState('')
-    const [email, setEmail] = useState('')
-    const [password, setPassword] = useState('')
-    const [confirmPassword, setConfirmPassword] = useState('')
+    const [isMounted, setIsMounted] = useState(false)
+    const [formData, setFormData] = useState({
+        name: '',
+        email: '',
+        password: '',
+        confirmPassword: ''
+    })
     const [error, setError] = useState('')
     const [isLoading, setIsLoading] = useState(false)
+
+    useEffect(() => {
+        setIsMounted(true)
+    }, [])
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { id, value } = e.target
+        setFormData(prev => ({ ...prev, [id]: value }))
+        if (error) setError('')
+    }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setError('')
 
         // Validation
-        if (password !== confirmPassword) {
+        if (formData.password !== formData.confirmPassword) {
             setError('Passwords do not match')
             return
         }
 
-        if (password.length < 8) {
+        if (formData.password.length < 8) {
             setError('Password must be at least 8 characters long')
             return
         }
@@ -39,7 +51,11 @@ export default function SignUpPage() {
             const response = await fetch('/api/auth/signup', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, email, password }),
+                body: JSON.stringify({
+                    name: formData.name,
+                    email: formData.email,
+                    password: formData.password
+                }),
             })
 
             const data = await response.json()
@@ -50,15 +66,18 @@ export default function SignUpPage() {
 
             // Auto sign in after successful signup
             const result = await signIn('credentials', {
-                email,
-                password,
+                email: formData.email,
+                password: formData.password,
                 redirect: false,
             })
 
             if (result?.error) {
                 setError('Account created but sign in failed. Please try signing in manually.')
+                // Optional: redirect to signin
+                setTimeout(() => router.push('/auth/signin'), 2000)
             } else {
                 router.push('/dashboard')
+                router.refresh() // Ensure session is updated
             }
         } catch (error: any) {
             setError(error.message || 'Something went wrong. Please try again.')
@@ -69,6 +88,18 @@ export default function SignUpPage() {
 
     const handleGoogleSignUp = () => {
         signIn('google', { callbackUrl: '/dashboard' })
+    }
+
+    // Premature return for hydration mismatch prevention if absolutely necessary,
+    // but usually just rendering consistent HTML is enough. 
+    // We'll stick to rendering the form but disabling until mounted if we want to be super safe,
+    // or just relying on consistent initial state.
+    // The inputs are controlled, consistent from start ('').
+    // Only conditionally render things that depend on window/localstorage if any.
+    // Here, simply ensuring standard React patterns should suffice.
+
+    if (!isMounted) {
+        return null // Avoid hydration mismatch by not rendering until client-side available
     }
 
     return (
@@ -104,7 +135,7 @@ export default function SignUpPage() {
                             />
                             <path
                                 fill="currentColor"
-                                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.04-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
                             />
                             <path
                                 fill="currentColor"
@@ -142,9 +173,10 @@ export default function SignUpPage() {
                                 id="name"
                                 type="text"
                                 placeholder="John Doe"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
+                                value={formData.name}
+                                onChange={handleChange}
                                 required
+                                autoComplete="name"
                                 className="h-12"
                             />
                         </div>
@@ -160,9 +192,10 @@ export default function SignUpPage() {
                                 id="email"
                                 type="email"
                                 placeholder="you@example.com"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                value={formData.email}
+                                onChange={handleChange}
                                 required
+                                autoComplete="email"
                                 className="h-12"
                             />
                         </div>
@@ -178,10 +211,11 @@ export default function SignUpPage() {
                                 id="password"
                                 type="password"
                                 placeholder="At least 8 characters"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
+                                value={formData.password}
+                                onChange={handleChange}
                                 required
                                 minLength={8}
+                                autoComplete="new-password"
                                 className="h-12"
                             />
                         </div>
@@ -197,9 +231,10 @@ export default function SignUpPage() {
                                 id="confirmPassword"
                                 type="password"
                                 placeholder="Re-enter password"
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                value={formData.confirmPassword}
+                                onChange={handleChange}
                                 required
+                                autoComplete="new-password"
                                 className="h-12"
                             />
                         </div>

@@ -168,4 +168,63 @@ export const habitRouter = createTRPCRouter({
                 orderBy: { completionDate: 'asc' },
             })
         }),
+    // Get stats for all active habits
+    getStats: protectedProcedure.query(async ({ ctx }) => {
+        const userId = ctx.session.user.id
+
+        const habits = await ctx.db.habit.findMany({
+            where: { userId, isActive: true },
+            include: {
+                completions: {
+                    orderBy: { completionDate: 'desc' },
+                    take: 30 // Get last 30 completions to calculate current streak
+                }
+            }
+        })
+
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        const yesterday = new Date(today)
+        yesterday.setDate(yesterday.getDate() - 1)
+
+        const stats: Record<string, { streak: number, totalCompletions: number }> = {}
+
+        for (const habit of habits) {
+            let streak = 0
+            let currentCheckDate = new Date(today)
+
+            // Calculate streak
+            // Check if completed today or yesterday to equal "active streak"
+            const completionsSet = new Set(
+                habit.completions.map(c => c.completionDate.toISOString().split('T')[0])
+            )
+
+            // If not completed today, start check from yesterday
+            if (!completionsSet.has(today.toISOString().split('T')[0])) {
+                currentCheckDate = yesterday
+            }
+
+            while (true) {
+                const dateStr = currentCheckDate.toISOString().split('T')[0]
+                if (completionsSet.has(dateStr)) {
+                    streak++
+                    currentCheckDate.setDate(currentCheckDate.getDate() - 1)
+                } else {
+                    break
+                }
+            }
+
+            // Get total completions count (aggregate query would be improved, but this roughly works with included data or separate count)
+            const total = await ctx.db.habitCompletion.count({
+                where: { habitId: habit.id, status: 'completed' }
+            })
+
+            stats[habit.id] = {
+                streak,
+                totalCompletions: total
+            }
+        }
+
+        return stats
+    })
 })

@@ -14,9 +14,12 @@ export default function JournalPage() {
     const router = useRouter()
     const [searchQuery, setSearchQuery] = useState('')
 
-    // Get entries from last 90 days
-    const endDate = new Date()
-    const startDate = subDays(endDate, 90)
+    // Use state to keep dates stable and prevent infinite refetching
+    const [{ startDate, endDate }] = useState(() => {
+        const end = new Date()
+        const start = subDays(end, 90)
+        return { startDate: start, endDate: end }
+    })
 
     const { data: entries, isLoading } = api.journal.getAll.useQuery({
         startDate,

@@ -50,9 +50,19 @@ export default function DashboardPage() {
             <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
-                        <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                            Dashboard
-                        </h1>
+                        <div className="flex items-center gap-8">
+                            <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                                Dashboard
+                            </h1>
+                            <div className="hidden md:flex items-center gap-4">
+                                <Link
+                                    href="/dashboard/ai"
+                                    className="text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors"
+                                >
+                                    AI Assistant
+                                </Link>
+                            </div>
+                        </div>
                         <div className="flex items-center gap-3">
                             <span className="text-sm text-gray-600 dark:text-gray-400">
                                 {session.user?.name || session.user?.email}
@@ -203,6 +213,14 @@ export default function DashboardPage() {
                                 <div className="text-3xl mb-2">✓</div>
                                 <p className="font-medium text-gray-900 dark:text-white">Add Task</p>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">Plan your next action</p>
+                            </button>
+                        </Link>
+
+                        <Link href="/dashboard/ai">
+                            <button className="w-full p-6 border-2 border-dashed border-purple-300 dark:border-purple-600/50 rounded-lg hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors">
+                                <div className="text-3xl mb-2">🤖</div>
+                                <p className="font-medium text-gray-900 dark:text-white">Ask AI</p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">Get insights & advice</p>
                             </button>
                         </Link>
                     </div>

@@ -16,7 +16,12 @@ export const journalRouter = createTRPCRouter({
             if (input.startDate || input.endDate) {
                 where.entryDate = {}
                 if (input.startDate) where.entryDate.gte = input.startDate
-                if (input.endDate) where.entryDate.lte = input.endDate
+                if (input.endDate) {
+                    // Ensure we capture the full end day
+                    const end = new Date(input.endDate)
+                    end.setHours(23, 59, 59, 999)
+                    where.entryDate.lte = end
+                }
             }
 
             return await ctx.db.journalEntry.findMany({

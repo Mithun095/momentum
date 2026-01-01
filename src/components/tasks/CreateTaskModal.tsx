@@ -36,7 +36,7 @@ interface CreateTaskModalProps {
 export function CreateTaskModal({ open, onClose, onSubmit }: CreateTaskModalProps) {
     const [title, setTitle] = useState('')
     const [description, setDescription] = useState('')
-    const [dueDate, setDueDate] = useState('')
+    const [dueDate, setDueDate] = useState(new Date().toISOString().split('T')[0]) // Default to today
     const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium')
     const [category, setCategory] = useState('')
     const [isSubmitting, setIsSubmitting] = useState(false)
