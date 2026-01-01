@@ -75,7 +75,40 @@ export default function TasksPage() {
     })
 
     const toggleComplete = api.task.toggleComplete.useMutation({
-        onSuccess: () => {
+        // Optimistic update for instant UI feedback
+        onMutate: async ({ id }) => {
+            // Cancel any outgoing refetches
+            await utils.task.getAll.cancel()
+            await utils.task.getStats.cancel()
+
+            // Snapshot the previous value
+            const previousTasks = utils.task.getAll.getData({})
+            const previousStats = utils.task.getStats.getData()
+
+            // Optimistically update to the new value
+            utils.task.getAll.setData({}, (old) =>
+                old?.map((task) =>
+                    task.id === id
+                        ? {
+                            ...task,
+                            status: task.status === 'completed' ? 'pending' : 'completed',
+                            completedAt: task.status === 'completed' ? null : new Date(),
+                        }
+                        : task
+                )
+            )
+
+            // Return context with previous values for rollback
+            return { previousTasks, previousStats }
+        },
+        onError: (_err, _variables, context) => {
+            // Rollback on error
+            if (context?.previousTasks) {
+                utils.task.getAll.setData({}, context.previousTasks)
+            }
+        },
+        onSettled: () => {
+            // Refetch to ensure data is in sync
             void utils.task.getAll.invalidate()
             void utils.task.getStats.invalidate()
         },

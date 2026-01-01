@@ -180,7 +180,7 @@ export function HabitList({ habits, isLoading }: HabitListProps) {
                                     </div>
                                 ) : (
                                     <Button
-                                        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                                        className="w-full bg-gray-800 hover:bg-gray-700 dark:bg-gray-200 dark:hover:bg-gray-300 dark:text-gray-900"
                                         onClick={() => handleQuickComplete(habit.id)}
                                         disabled={markComplete.isPending}
                                     >

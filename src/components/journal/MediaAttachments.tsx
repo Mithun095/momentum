@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { ImagePlus, X, Loader2, Image as ImageIcon } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
+import { compressImageToFile, shouldCompress, formatBytes } from '@/lib/utils/imageCompression'
 
 interface Attachment {
     id?: string
@@ -29,6 +30,7 @@ export function MediaAttachments({
     className
 }: MediaAttachmentsProps) {
     const [isUploading, setIsUploading] = useState(false)
+    const [compressionStatus, setCompressionStatus] = useState<string | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
     const { toast } = useToast()
 
@@ -37,11 +39,28 @@ export function MediaAttachments({
         if (!files || files.length === 0) return
 
         setIsUploading(true)
+        setCompressionStatus(null)
 
         try {
             const newAttachments: Attachment[] = []
 
-            for (const file of Array.from(files)) {
+            for (let i = 0; i < files.length; i++) {
+                let file = files[i]
+                const originalSize = file.size
+
+                // Compress image if it's over 200KB
+                if (shouldCompress(file)) {
+                    setCompressionStatus(`Compressing image ${i + 1}/${files.length}...`)
+                    try {
+                        file = await compressImageToFile(file)
+                        console.log(`Compressed: ${formatBytes(originalSize)} → ${formatBytes(file.size)}`)
+                    } catch (err) {
+                        console.warn('Compression failed, uploading original:', err)
+                    }
+                }
+
+                setCompressionStatus(`Uploading image ${i + 1}/${files.length}...`)
+
                 const formData = new FormData()
                 formData.append('file', file)
 
@@ -78,6 +97,7 @@ export function MediaAttachments({
             })
         } finally {
             setIsUploading(false)
+            setCompressionStatus(null)
             // Reset file input
             if (fileInputRef.current) {
                 fileInputRef.current.value = ''

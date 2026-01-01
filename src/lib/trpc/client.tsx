@@ -14,7 +14,18 @@ export const trpc = createTRPCReact<AppRouter>()
 export const api = trpc
 
 export function TRPCProvider({ children }: { children: React.ReactNode }) {
-    const [queryClient] = useState(() => new QueryClient())
+    const [queryClient] = useState(() => new QueryClient({
+        defaultOptions: {
+            queries: {
+                // Data is considered fresh for 30 seconds - prevents refetching on every mount
+                staleTime: 30 * 1000,
+                // Don't refetch when window regains focus (reduces unnecessary requests)
+                refetchOnWindowFocus: false,
+                // Retry failed requests once
+                retry: 1,
+            },
+        },
+    }))
     const [trpcClient] = useState(() =>
         trpc.createClient({
             links: [

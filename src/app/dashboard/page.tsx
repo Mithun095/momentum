@@ -29,9 +29,9 @@ export default function DashboardPage() {
 
     if (status === 'loading') {
         return (
-            <div className="min-h-screen flex items-center justify-center">
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-600 mx-auto mb-4"></div>
                     <p className="text-gray-600 dark:text-gray-400">Loading...</p>
                 </div>
             </div>
@@ -50,16 +50,14 @@ export default function DashboardPage() {
             <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
-                        <div className="flex items-center">
-                            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                                Momentum
-                            </h1>
-                        </div>
-                        <div className="flex items-center gap-4">
-                            <span className="text-sm text-gray-700 dark:text-gray-300">
+                        <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                            Dashboard
+                        </h1>
+                        <div className="flex items-center gap-3">
+                            <span className="text-sm text-gray-600 dark:text-gray-400">
                                 {session.user?.name || session.user?.email}
                             </span>
-                            <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center text-white font-semibold">
+                            <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-300 text-sm font-medium">
                                 {session.user?.name?.[0]?.toUpperCase() || 'U'}
                             </div>
                         </div>
@@ -68,13 +66,10 @@ export default function DashboardPage() {
             </nav>
 
             {/* Main Content */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="mb-8">
-                    <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                        Welcome back, {session.user?.name?.split(' ')[0] || 'there'}! 👋
-                    </h2>
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="mb-6">
                     <p className="text-gray-600 dark:text-gray-400">
-                        Here's your progress overview
+                        Welcome back, {session.user?.name?.split(' ')[0] || 'there'}. Here's your overview.
                     </p>
                 </div>
 
@@ -143,7 +138,7 @@ export default function DashboardPage() {
                             <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
                                 Today's Tasks
                             </h3>
-                            <Link href="/dashboard/tasks" className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400">
+                            <Link href="/dashboard/tasks" className="text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200">
                                 View all →
                             </Link>
                         </div>
@@ -152,21 +147,21 @@ export default function DashboardPage() {
                                 <div
                                     key={task.id}
                                     className={`flex items-center gap-3 p-3 rounded-lg border ${task.status === 'completed'
-                                            ? 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600'
-                                            : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+                                        ? 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600'
+                                        : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
                                         }`}
                                 >
                                     <div className={`w-4 h-4 rounded-full border-2 ${task.status === 'completed'
-                                            ? 'bg-green-500 border-green-500'
-                                            : task.priority === 'high'
-                                                ? 'border-red-500'
-                                                : task.priority === 'medium'
-                                                    ? 'border-yellow-500'
-                                                    : 'border-gray-400'
+                                        ? 'bg-green-500 border-green-500'
+                                        : task.priority === 'high'
+                                            ? 'border-red-500'
+                                            : task.priority === 'medium'
+                                                ? 'border-yellow-500'
+                                                : 'border-gray-400'
                                         }`} />
                                     <span className={`flex-1 ${task.status === 'completed'
-                                            ? 'line-through text-gray-500 dark:text-gray-400'
-                                            : 'text-gray-900 dark:text-gray-100'
+                                        ? 'line-through text-gray-500 dark:text-gray-400'
+                                        : 'text-gray-900 dark:text-gray-100'
                                         }`}>
                                         {task.title}
                                     </span>

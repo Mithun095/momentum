@@ -47,21 +47,50 @@ export function TodayHabits({ className }: TodayHabitsProps) {
     const utils = api.useUtils()
 
     const markComplete = api.habit.markComplete.useMutation({
+        // Optimistic update for instant feedback
+        onMutate: async (variables) => {
+            // Cancel any outgoing refetches
+            await utils.habit.getAllCompletions.cancel()
+
+            // Snapshot the previous value
+            const previousCompletions = utils.habit.getAllCompletions.getData({ startDate, endDate })
+
+            // Optimistically add the completion
+            utils.habit.getAllCompletions.setData({ startDate, endDate }, (old) => {
+                const newCompletion = {
+                    id: `temp-${Date.now()}`,
+                    habitId: variables.habitId,
+                    completionDate: variables.date,
+                    status: variables.status || 'completed',
+                    notes: null as string | null,
+                    createdAt: new Date(),
+                }
+                return old ? [...old, newCompletion] : [newCompletion]
+            })
+
+            return { previousCompletions }
+        },
         onSuccess: (_data, variables) => {
             toast({
                 title: 'Habit completed!',
                 description: 'Great job! Keep up the streak! 🔥',
             })
-            // Void the promise to fix floating promise lint
-            void utils.habit.getAll.invalidate()
-            void utils.habit.getAllCompletions.invalidate()
         },
-        onError: (error) => {
+        onError: (error, _variables, context) => {
+            // Rollback on error
+            if (context?.previousCompletions) {
+                utils.habit.getAllCompletions.setData({ startDate, endDate }, context.previousCompletions)
+            }
             toast({
                 title: 'Error',
                 description: error.message || 'Failed to mark habit',
                 variant: 'destructive',
             })
+        },
+        onSettled: () => {
+            // Refetch to ensure data is in sync
+            void utils.habit.getAll.invalidate()
+            void utils.habit.getAllCompletions.invalidate()
         },
     })
 

@@ -132,8 +132,14 @@ export function JournalEditor({
                     </div>
                 )}
                 {error && (
-                    <div className="mt-2 text-sm text-red-500">
-                        Voice error: {error}
+                    <div className="mt-2 text-sm text-amber-600 dark:text-amber-400">
+                        {error === 'network' ? (
+                            <span>Voice input requires HTTPS in production. Try typing instead.</span>
+                        ) : error === 'not-allowed' ? (
+                            <span>Microphone access denied. Please enable it in browser settings.</span>
+                        ) : (
+                            <span>Voice error: {error}</span>
+                        )}
                     </div>
                 )}
             </CardHeader>
