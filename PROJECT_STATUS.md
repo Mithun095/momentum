@@ -16,11 +16,11 @@
 | 4 | Journal/Diary System | ✅ Complete |
 | 5 | Task & Planning System | ✅ Complete |
 | 6 | Collaborative Features | ⏳ Pending |
-| 7 | AI Personal Assistant | ⏳ Pending |
-| 8 | Visualization & Analytics | ⏳ Pending |
+| 7 | AI Personal Assistant | 🔄 Partial |
+| 8 | Visualization & Analytics | 🔄 Partial |
 | 9 | UI/UX & Theming | 🔄 Partial |
 | 10 | Advanced Features | ⏳ Pending |
-| 11 | Testing & Quality Assurance | ⏳ Pending |
+| 11 | Testing & Quality Assurance | 🔄 Partial |
 | 12 | Deployment | ⏳ Pending |
 
 ---
@@ -129,10 +129,10 @@
 
 ---
 
-## Phase 7: AI Personal Assistant ⏳
-
-- [ ] AI chat interface
-- [ ] Context management system
+## Phase 7: AI Personal Assistant 🔄
+- [x] Basic AI Setup (Gemini Integration)
+- [x] AI chat interface
+- [ ] Context management system (Partially implemented)
 - [ ] User consent management
 - [ ] Natural language task creation
 - [ ] Insights and recommendations
@@ -208,16 +208,41 @@
 
 ---
 
-## Known Issues
+## Known Issues & Bugs
 
-### Minor: Hydration Mismatch Warnings
-- Console shows hydration errors on initial load
-- Cosmetic only, no functional impact
-- Priority: Low
+### Feature-Level Bugs
+- **AI Chat**: Context awareness is limited; sometimes fails to pick up recent user actions immediately.
+- **Journal**: List view can be slow to update immediately after creation (requires refresh occasionally).
+
+### Technical/Minor Issues
+- **Hydration Mismatch**: Console shows hydration warnings on initial load (Cosmetic only).
+- **React Key Collisions**: Occasional unique key prop warnings in console.
 
 ### Minor: React Key Collisions
 - Occasional "two children with same key" warnings
 - Priority: Low
+
+## Resolved Issues (Jan 2026)
+
+### Critical: AI API Key Persistence
+- **Issue**: `GEMINI_API_KEY` was not being loaded consistently by Next.js runtime.
+- **Fix**: Implemented explicit `dotenv` loading in `gemini.ts` library.
+- **Status**: ✅ Fixed
+
+### Critical: Habit Progress UI
+- **Issue**: Streak and completion stats were calculated but not returned to frontend.
+- **Fix**: Added `getStats` procedure to `habitRouter` and updated `HabitList` to display live metrics.
+- **Status**: ✅ Fixed
+
+### Critical: Journal Infinite Loading
+- **Issue**: `new Date()` dependency in `useEffect` caused infinite re-fetching loop.
+- **Fix**: Memoized date range calculation in `JournalPage`.
+- **Status**: ✅ Fixed
+
+### Major: Task Creation Consistency
+- **Issue**: Newly created tasks were not appearing in list immediately.
+- **Fix**: Added default `dueDate` and improved Zod schema validation.
+- **Status**: ✅ Fixed
 
 ---
 
@@ -269,4 +294,5 @@ src/
 | Dec 31 | Habits | Checkpoint 3 - Habit system |
 | Dec 31 | Journal | Checkpoint 4 - Journal system (complete) |
 | Dec 31 | Tasks | Checkpoint 5 - Task & Planning system |
+| Jan 01 | Fixes | Bug fixes: AI Env, Habit Stats, Journal infinite loop |
 

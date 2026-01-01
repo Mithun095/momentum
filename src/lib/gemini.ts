@@ -1,13 +1,18 @@
+import 'dotenv/config'
 import { GoogleGenerativeAI, GenerativeModel, ChatSession } from '@google/generative-ai'
 
-// Initialize the Gemini client
-const geminiApiKey = process.env.GEMINI_API_KEY
+// Initialize the Gemini client lazily
+let genAI: GoogleGenerativeAI | null = null
 
-if (!geminiApiKey) {
-    console.warn('GEMINI_API_KEY is not set. AI features will not work.')
+function getGenAI() {
+    if (genAI) return genAI
+
+    const key = process.env.GEMINI_API_KEY
+    if (key) {
+        genAI = new GoogleGenerativeAI(key)
+    }
+    return genAI
 }
-
-const genAI = geminiApiKey ? new GoogleGenerativeAI(geminiApiKey) : null
 
 // System prompt for the AI assistant
 const SYSTEM_PROMPT = `You are Momentum AI, a helpful personal assistant for the Momentum life management platform.
@@ -39,8 +44,9 @@ export interface AiMessage {
  * Get the Gemini model
  */
 export function getGeminiModel(): GenerativeModel | null {
-    if (!genAI) return null
-    return genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+    const ai = getGenAI()
+    if (!ai) return null
+    return ai.getGenerativeModel({ model: 'gemini-1.5-flash' })
 }
 
 /**
