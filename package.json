@@ -33,6 +33,7 @@
     "@trpc/next": "^11.0.0",
     "@trpc/react-query": "^11.0.0",
     "@trpc/server": "^11.0.0",
+    "@uploadthing/react": "^7.3.3",
     "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -49,6 +50,7 @@
     "recharts": "^3.6.0",
     "superjson": "^2.2.6",
     "tailwind-merge": "^3.4.0",
+    "uploadthing": "^7.7.4",
     "zod": "^4.2.1",
     "zustand": "^5.0.9"
   },
