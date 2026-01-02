@@ -120,6 +120,8 @@ export const taskRouter = createTRPCRouter({
                 dueDate: z.date().optional(),
                 priority: z.enum(['low', 'medium', 'high']).default('medium'),
                 category: z.string().optional(),
+                isRecurring: z.boolean().optional(),
+                recurringPattern: z.string().optional(),
             })
         )
         .mutation(async ({ ctx, input }) => {
@@ -147,7 +149,7 @@ export const taskRouter = createTRPCRouter({
         .mutation(async ({ ctx, input }) => {
             const userId = ctx.session.user.id
             const { id, ...data } = input
-            
+
             // Verify ownership
             const task = await ctx.db.task.findFirst({
                 where: { id, userId },
@@ -155,7 +157,7 @@ export const taskRouter = createTRPCRouter({
             if (!task) {
                 throw new Error('Task not found')
             }
-            
+
             const updateData: any = { ...data }
 
             if (data.status === 'completed') {
@@ -174,7 +176,7 @@ export const taskRouter = createTRPCRouter({
         .input(z.object({ id: z.string() }))
         .mutation(async ({ ctx, input }) => {
             const userId = ctx.session.user.id
-            
+
             // Verify ownership
             const task = await ctx.db.task.findFirst({
                 where: { id: input.id, userId },
@@ -196,7 +198,7 @@ export const taskRouter = createTRPCRouter({
         .input(z.object({ id: z.string() }))
         .mutation(async ({ ctx, input }) => {
             const userId = ctx.session.user.id
-            
+
             // Verify ownership
             const task = await ctx.db.task.findFirst({
                 where: { id: input.id, userId },
@@ -204,7 +206,7 @@ export const taskRouter = createTRPCRouter({
             if (!task) {
                 throw new Error('Task not found')
             }
-            
+
             return await ctx.db.task.delete({
                 where: { id: input.id },
             })

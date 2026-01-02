@@ -1,6 +1,11 @@
 import { z } from 'zod'
 import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc'
 
+// Helper to normalize date to UTC midnight for consistent database storage
+const toUTC = (date: Date) => {
+    return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
+}
+
 export const journalRouter = createTRPCRouter({
     getAll: protectedProcedure
         .input(
@@ -15,11 +20,10 @@ export const journalRouter = createTRPCRouter({
 
             if (input.startDate || input.endDate) {
                 where.entryDate = {}
-                if (input.startDate) where.entryDate.gte = input.startDate
+                if (input.startDate) where.entryDate.gte = toUTC(input.startDate)
                 if (input.endDate) {
-                    // Ensure we capture the full end day
-                    const end = new Date(input.endDate)
-                    end.setHours(23, 59, 59, 999)
+                    const end = toUTC(input.endDate)
+                    end.setUTCHours(23, 59, 59, 999)
                     where.entryDate.lte = end
                 }
             }
@@ -39,7 +43,7 @@ export const journalRouter = createTRPCRouter({
                 where: {
                     userId_entryDate: {
                         userId,
-                        entryDate: input.date,
+                        entryDate: toUTC(input.date),
                     },
                 },
                 include: { sections: true, attachments: true },
@@ -50,6 +54,7 @@ export const journalRouter = createTRPCRouter({
         .input(
             z.object({
                 entryDate: z.date(),
+                title: z.string().optional(),
                 mainContent: z.string(),
                 voiceTranscript: z.string().optional(),
                 mood: z.string().optional(),
@@ -66,10 +71,12 @@ export const journalRouter = createTRPCRouter({
         .mutation(async ({ ctx, input }) => {
             const userId = ctx.session.user.id
             const { sections, ...entryData } = input
+            const normalizedDate = toUTC(input.entryDate)
 
             const entry = await ctx.db.journalEntry.create({
                 data: {
                     ...entryData,
+                    entryDate: normalizedDate,
                     userId,
                     sections: sections
                         ? {
@@ -110,6 +117,7 @@ export const journalRouter = createTRPCRouter({
         .input(
             z.object({
                 id: z.string(),
+                title: z.string().optional(),
                 mainContent: z.string().optional(),
                 mood: z.string().optional(),
             })

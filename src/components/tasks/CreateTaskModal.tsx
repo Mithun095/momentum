@@ -30,6 +30,8 @@ interface CreateTaskModalProps {
         dueDate?: Date
         priority: 'low' | 'medium' | 'high'
         category?: string
+        isRecurring?: boolean
+        recurringPattern?: string | null
     }) => Promise<void>
 }
 
@@ -39,6 +41,7 @@ export function CreateTaskModal({ open, onClose, onSubmit }: CreateTaskModalProp
     const [dueDate, setDueDate] = useState(new Date().toISOString().split('T')[0]) // Default to today
     const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium')
     const [category, setCategory] = useState('')
+    const [recurringPattern, setRecurringPattern] = useState<string | null>(null)
     const [isSubmitting, setIsSubmitting] = useState(false)
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -53,6 +56,8 @@ export function CreateTaskModal({ open, onClose, onSubmit }: CreateTaskModalProp
                 dueDate: dueDate ? new Date(dueDate) : undefined,
                 priority,
                 category: category || undefined,
+                isRecurring: !!recurringPattern,
+                recurringPattern: recurringPattern || undefined,
             })
             handleClose()
         } finally {
@@ -66,6 +71,7 @@ export function CreateTaskModal({ open, onClose, onSubmit }: CreateTaskModalProp
         setDueDate('')
         setPriority('medium')
         setCategory('')
+        setRecurringPattern(null)
         onClose()
     }
 
@@ -157,6 +163,22 @@ export function CreateTaskModal({ open, onClose, onSubmit }: CreateTaskModalProp
                                     </SelectContent>
                                 </Select>
                             </div>
+                        </div>
+
+                        {/* Recurring */}
+                        <div className="space-y-2">
+                            <Label>Recurring (Optional)</Label>
+                            <Select value={recurringPattern || 'none'} onValueChange={(v) => setRecurringPattern(v === 'none' ? null : v)}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Does not repeat" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">Does not repeat</SelectItem>
+                                    <SelectItem value="daily">Daily</SelectItem>
+                                    <SelectItem value="weekly">Weekly</SelectItem>
+                                    <SelectItem value="monthly">Monthly</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
                     </div>
 

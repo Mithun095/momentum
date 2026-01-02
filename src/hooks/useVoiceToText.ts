@@ -1,229 +1,175 @@
 'use client'
 
 import { useState, useCallback, useEffect, useRef } from 'react'
-
-interface UseVoiceToTextOptions {
-    continuous?: boolean
-    interimResults?: boolean
-    lang?: string
-    useDeepgram?: boolean // Use Deepgram API instead of Web Speech API
-}
+// Singleton model reference to prevent reloading
+let globalModel: any = null
+let modelLoadingPromise: Promise<any> | null = null
 
 interface UseVoiceToTextReturn {
     isListening: boolean
     transcript: string
     interimTranscript: string
     isSupported: boolean
-    startListening: () => void
+    startListening: () => Promise<void>
     stopListening: () => void
     resetTranscript: () => void
     error: string | null
-    isProcessing: boolean
-    source: 'web-speech' | 'deepgram' | null
+    isModelLoading: boolean
 }
 
-export function useVoiceToText(options: UseVoiceToTextOptions = {}): UseVoiceToTextReturn {
-    const {
-        continuous = true,
-        interimResults = true,
-        lang = 'en-US',
-        useDeepgram = true // Default to trying Deepgram first
-    } = options
-
+export function useVoiceToText(): UseVoiceToTextReturn {
     const [isListening, setIsListening] = useState(false)
     const [transcript, setTranscript] = useState('')
     const [interimTranscript, setInterimTranscript] = useState('')
     const [error, setError] = useState<string | null>(null)
+    const [isModelLoading, setIsModelLoading] = useState(false)
     const [isSupported, setIsSupported] = useState(false)
-    const [isProcessing, setIsProcessing] = useState(false)
-    const [source, setSource] = useState<'web-speech' | 'deepgram' | null>(null)
-    const [deepgramAvailable, setDeepgramAvailable] = useState<boolean | null>(null)
 
-    const recognitionRef = useRef<SpeechRecognition | null>(null)
-    const mediaRecorderRef = useRef<MediaRecorder | null>(null)
-    const audioChunksRef = useRef<Blob[]>([])
+    const recognizerRef = useRef<any>(null)
+    const audioContextRef = useRef<AudioContext | null>(null)
+    const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null)
+    const processorRef = useRef<ScriptProcessorNode | null>(null)
+    const streamRef = useRef<MediaStream | null>(null)
 
-    // Check Deepgram availability on mount
     useEffect(() => {
-        if (useDeepgram) {
-            fetch('/api/transcribe')
-                .then(res => res.json())
-                .then(data => setDeepgramAvailable(data.available))
-                .catch(() => setDeepgramAvailable(false))
-        }
-    }, [useDeepgram])
-
-    // Check for browser support (Web Speech API)
-    useEffect(() => {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
-        const hasWebSpeech = !!SpeechRecognition
-        const hasMediaRecorder = typeof MediaRecorder !== 'undefined'
-
-        setIsSupported(hasWebSpeech || (useDeepgram && hasMediaRecorder))
-
-        if (hasWebSpeech) {
-            recognitionRef.current = new SpeechRecognition()
-            recognitionRef.current.continuous = continuous
-            recognitionRef.current.interimResults = interimResults
-            recognitionRef.current.lang = lang
-
-            recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
-                let finalTranscript = ''
-                let interim = ''
-
-                for (let i = event.resultIndex; i < event.results.length; i++) {
-                    const result = event.results[i]
-                    if (result.isFinal) {
-                        finalTranscript += result[0].transcript + ' '
-                    } else {
-                        interim += result[0].transcript
-                    }
-                }
-
-                if (finalTranscript) {
-                    setTranscript((prev) => prev + finalTranscript)
-                    setSource('web-speech')
-                }
-                setInterimTranscript(interim)
-            }
-
-            recognitionRef.current.onerror = (event: SpeechRecognitionErrorEvent) => {
-                console.error('Speech recognition error:', event.error)
-                setError(event.error)
-                setIsListening(false)
-            }
-
-            recognitionRef.current.onend = () => {
-                setIsListening(false)
-                setInterimTranscript('')
-            }
+        if (typeof window !== 'undefined') {
+            const isSecure = window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            setIsSupported(isSecure)
         }
 
+        // Cleanup on unmount
         return () => {
-            if (recognitionRef.current) {
-                recognitionRef.current.abort()
-            }
-        }
-    }, [continuous, interimResults, lang, useDeepgram])
-
-    // Deepgram recording functions
-    const startDeepgramRecording = useCallback(async () => {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-
-            const mediaRecorder = new MediaRecorder(stream, {
-                mimeType: MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4'
-            })
-
-            mediaRecorderRef.current = mediaRecorder
-            audioChunksRef.current = []
-
-            mediaRecorder.ondataavailable = (event) => {
-                if (event.data.size > 0) {
-                    audioChunksRef.current.push(event.data)
-                }
-            }
-
-            mediaRecorder.onstop = async () => {
-                // Stop all tracks
-                stream.getTracks().forEach(track => track.stop())
-
-                if (audioChunksRef.current.length > 0) {
-                    setIsProcessing(true)
-                    setInterimTranscript('Processing audio...')
-
-                    try {
-                        const audioBlob = new Blob(audioChunksRef.current, {
-                            type: mediaRecorder.mimeType
-                        })
-
-                        const formData = new FormData()
-                        formData.append('audio', audioBlob)
-
-                        const response = await fetch('/api/transcribe', {
-                            method: 'POST',
-                            body: formData
-                        })
-
-                        const data = await response.json()
-
-                        if (response.ok && data.transcript) {
-                            setTranscript(prev => prev + (prev ? ' ' : '') + data.transcript)
-                            setSource('deepgram')
-                        } else if (data.fallback) {
-                            // Deepgram failed, user should try Web Speech API
-                            setError('Transcription service unavailable. Try again.')
-                        } else {
-                            setError(data.error || 'Transcription failed')
-                        }
-                    } catch (err) {
-                        console.error('Deepgram transcription error:', err)
-                        setError('Failed to transcribe audio')
-                    } finally {
-                        setIsProcessing(false)
-                        setInterimTranscript('')
-                    }
-                }
-            }
-
-            mediaRecorder.start(1000) // Collect data every second
-            setIsListening(true)
-            setError(null)
-        } catch (err) {
-            console.error('Failed to start recording:', err)
-            setError('Microphone access denied')
+            stopListening()
         }
     }, [])
 
-    const stopDeepgramRecording = useCallback(() => {
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-            mediaRecorderRef.current.stop()
-            setIsListening(false)
-        }
-    }, [])
+    const loadModel = async () => {
+        if (globalModel) return globalModel
+        if (modelLoadingPromise) return modelLoadingPromise
 
-    const startListening = useCallback(() => {
-        setError(null)
-        setTranscript('')
-        setInterimTranscript('')
-        setSource(null)
-
-        // Decide which method to use
-        const shouldUseDeepgram = useDeepgram && deepgramAvailable
-
-        if (shouldUseDeepgram) {
-            startDeepgramRecording()
-        } else if (recognitionRef.current) {
+        setIsModelLoading(true)
+        modelLoadingPromise = (async () => {
             try {
-                recognitionRef.current.start()
-                setIsListening(true)
+                // @ts-ignore
+                const Vosk = await import('vosk-browser')
+                const model = await Vosk.createModel('/models/model.zip')
+                model.setLogLevel(-1)
+                globalModel = model
+                return model
             } catch (err) {
-                console.error('Failed to start speech recognition:', err)
-                setError('Failed to start speech recognition')
+                console.error('Failed to load Vosk model:', err)
+                setError('Failed to load voice model')
+                throw err
+            } finally {
+                setIsModelLoading(false)
             }
-        } else {
-            setError('Speech recognition not supported')
-        }
-    }, [useDeepgram, deepgramAvailable, startDeepgramRecording])
+        })()
 
-    const stopListening = useCallback(() => {
-        // Stop Deepgram recording
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-            stopDeepgramRecording()
+        return modelLoadingPromise
+    }
+
+    const startListening = useCallback(async () => {
+        setError(null)
+
+        if (!isSupported) {
+            setError('Voice requires HTTPS or localhost')
             return
         }
 
-        // Stop Web Speech API
-        if (recognitionRef.current && isListening) {
-            recognitionRef.current.stop()
-            setIsListening(false)
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    channelCount: 1,
+                    sampleRate: 16000
+                }
+            })
+
+            streamRef.current = stream
+
+            const model = await loadModel()
+            const recognizer = new model.KaldiRecognizer(16000)
+
+            recognizer.on('result', (message: any) => {
+                const text = message.result?.text
+                if (text && text.trim()) {
+                    setTranscript(prev => prev + (prev ? ' ' : '') + text)
+                    setInterimTranscript('')
+                }
+            })
+
+            recognizer.on('partialresult', (message: any) => {
+                const partial = message.result?.partial
+                if (partial) {
+                    setInterimTranscript(partial)
+                }
+            })
+
+            recognizerRef.current = recognizer
+
+            const audioContext = new AudioContext({ sampleRate: 16000 })
+            const source = audioContext.createMediaStreamSource(stream)
+            const processor = audioContext.createScriptProcessor(4096, 1, 1)
+
+            processor.onaudioprocess = (event) => {
+                if (recognizerRef.current && isListening) {
+                    try {
+                        const inputData = event.inputBuffer.getChannelData(0)
+                        recognizerRef.current.acceptWaveform(inputData)
+                    } catch (e) {
+                        // ignore
+                    }
+                }
+            }
+
+            source.connect(processor)
+            processor.connect(audioContext.destination)
+
+            audioContextRef.current = audioContext
+            sourceRef.current = source
+            processorRef.current = processor
+
+            setIsListening(true)
+        } catch (err) {
+            console.error('Error starting recording:', err)
+            setError(err instanceof Error ? err.message : 'Could not access microphone')
+            stopListening()
         }
-    }, [isListening, stopDeepgramRecording])
+    }, [isSupported, isListening]) // Added isListening to deps to allow proper state access inside audio process if needed, though ref is better
+
+    const stopListening = useCallback(() => {
+        setIsListening(false)
+
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => track.stop())
+            streamRef.current = null
+        }
+
+        if (processorRef.current) {
+            try { processorRef.current.disconnect() } catch (e) { }
+            processorRef.current = null
+        }
+
+        if (sourceRef.current) {
+            try { sourceRef.current.disconnect() } catch (e) { }
+            sourceRef.current = null
+        }
+
+        if (audioContextRef.current) {
+            try { audioContextRef.current.close() } catch (e) { }
+            audioContextRef.current = null
+        }
+
+        if (recognizerRef.current) {
+            try { recognizerRef.current.free() } catch (e) { }
+            recognizerRef.current = null
+        }
+    }, [])
 
     const resetTranscript = useCallback(() => {
         setTranscript('')
         setInterimTranscript('')
-        setSource(null)
     }, [])
 
     return {
@@ -235,7 +181,6 @@ export function useVoiceToText(options: UseVoiceToTextOptions = {}): UseVoiceToT
         stopListening,
         resetTranscript,
         error,
-        isProcessing,
-        source
+        isModelLoading
     }
 }

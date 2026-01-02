@@ -56,7 +56,6 @@ CREATE TABLE "user_consents" (
     "granted" BOOLEAN NOT NULL DEFAULT false,
     "grantedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "revokedAt" TIMESTAMP(3),
-
     CONSTRAINT "user_consents_pkey" PRIMARY KEY ("id")
 );
 
@@ -87,7 +86,6 @@ CREATE TABLE "habit_completions" (
     "status" TEXT NOT NULL DEFAULT 'completed',
     "notes" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
     CONSTRAINT "habit_completions_pkey" PRIMARY KEY ("id")
 );
 

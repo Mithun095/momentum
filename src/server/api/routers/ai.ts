@@ -1,7 +1,8 @@
 import { z } from 'zod'
 import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc'
 import { TRPCError } from '@trpc/server'
-import { generateAiResponse, generateAiResponseWithTools, isAiAvailable, type AiMessage } from '@/lib/gemini'
+import { generateAiResponse, isAiAvailable, type AiMessage } from '@/lib/gemini'
+import { generateAiResponseWithStrategy } from '@/lib/ai/client'
 import type { DbOperations, UserContext } from '@/lib/ai/agent'
 import { startOfDay, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns'
 
@@ -289,8 +290,8 @@ export const aiRouter = createTRPCRouter({
             ]
 
             try {
-                // Generate AI response with tools
-                const aiResponse = await generateAiResponseWithTools(aiMessages, userContext, dbOps)
+                // Generate AI response with tools (using fallback strategy)
+                const aiResponse = await generateAiResponseWithStrategy(aiMessages, userContext, dbOps)
 
                 // Save AI response with tool metadata
                 const assistantMessage = await ctx.db.aiMessage.create({
@@ -323,9 +324,18 @@ export const aiRouter = createTRPCRouter({
                 }
             } catch (error) {
                 console.error('AI response error:', error)
+
+                // Extract error message for user
+                let errorMessage = 'Failed to generate AI response'
+                if (error instanceof Error) {
+                    errorMessage = error.message
+                    // Log full stack for debugging
+                    console.error('AI Error Stack:', error.stack)
+                }
+
                 throw new TRPCError({
                     code: 'INTERNAL_SERVER_ERROR',
-                    message: 'Failed to generate AI response'
+                    message: errorMessage
                 })
             }
         }),

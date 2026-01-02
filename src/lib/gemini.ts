@@ -36,7 +36,7 @@ export interface AiResponseWithTools {
 export function getGeminiModel() {
     const ai = getGenAI()
     if (!ai) return null
-    return ai.getGenerativeModel({ model: 'gemini-1.5-flash' })
+    return ai.getGenerativeModel({ model: 'gemini-2.0-flash' })
 }
 
 /**
@@ -47,7 +47,7 @@ export function getGeminiModelWithTools() {
     if (!ai) return null
 
     return ai.getGenerativeModel({
-        model: 'gemini-1.5-flash',
+        model: 'gemini-2.0-flash',
         tools: [{ functionDeclarations: AI_TOOLS as any }],
     })
 }
@@ -105,7 +105,16 @@ export async function generateAiResponseWithTools(
     })
 
     const latestMessage = messages[messages.length - 1]
-    let response = await chat.sendMessage(latestMessage.content)
+    let response
+    try {
+        console.log('[Gemini] Sending message:', latestMessage.content.slice(0, 100))
+        response = await chat.sendMessage(latestMessage.content)
+        console.log('[Gemini] Got response, checking for function calls...')
+    } catch (error) {
+        console.error('[Gemini] API Error:', error)
+        throw new Error(`Gemini API error: ${error instanceof Error ? error.message : String(error)}`)
+    }
+
     let responseText = ''
     const toolCalls: AiResponseWithTools['toolCalls'] = []
 

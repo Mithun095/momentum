@@ -18,6 +18,7 @@ export function MobileNav({ userName, userEmail }: MobileNavProps) {
         { href: '/dashboard/journal', label: 'Journal', icon: '📔' },
         { href: '/dashboard/tasks', label: 'Tasks', icon: '📋' },
         { href: '/dashboard/analytics', label: 'Analytics', icon: '📊' },
+        { href: '/dashboard/workspace', label: 'Workspaces', icon: '👥' },
         { href: '/dashboard/ai', label: 'AI Assistant', icon: '🤖' },
     ]
 

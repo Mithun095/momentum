@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { JournalEditor } from '@/components/journal/JournalEditor'
@@ -37,6 +38,7 @@ export default function JournalEntryPage() {
     const entryDate = parse(dateStr, 'yyyy-MM-dd', new Date())
     const isValidDate = !isNaN(entryDate.getTime()) && dateStr.match(/^\d{4}-\d{2}-\d{2}$/)
 
+    const [title, setTitle] = useState('')
     const [mainContent, setMainContent] = useState('')
     const [mood, setMood] = useState<string | null>(null)
     const [sections, setSections] = useState<Section[]>([])
@@ -92,6 +94,7 @@ export default function JournalEntryPage() {
     // Load existing entry data
     useEffect(() => {
         if (existingEntry) {
+            setTitle(existingEntry.title || '')
             setMainContent(existingEntry.mainContent)
             setMood(existingEntry.mood)
             if (existingEntry.sections) {
@@ -123,6 +126,7 @@ export default function JournalEntryPage() {
             // Update existing
             await updateEntry.mutateAsync({
                 id: existingEntry.id,
+                title: title.trim() || undefined,
                 mainContent: content,
                 mood: mood || undefined,
             })
@@ -131,6 +135,7 @@ export default function JournalEntryPage() {
             setIsCreating(true)
             await createEntry.mutateAsync({
                 entryDate,
+                title: title.trim() || undefined,
                 mainContent: content,
                 mood: mood || undefined,
                 sections: sections.filter((s) => s.content.trim()).map((s) => ({
@@ -140,7 +145,7 @@ export default function JournalEntryPage() {
             })
             setIsCreating(false)
         }
-    }, [existingEntry, mood, sections, entryDate, createEntry, updateEntry])
+    }, [existingEntry, title, mood, sections, entryDate, createEntry, updateEntry])
 
     const handleMoodChange = (newMood: string) => {
         setMood(newMood)
@@ -213,6 +218,16 @@ export default function JournalEntryPage() {
             {/* Main Content */}
             <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="space-y-6">
+                    {/* Title Input */}
+                    <div className="space-y-2">
+                        <Input
+                            placeholder="Title (Optional)"
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            className="text-lg font-medium border-none px-0 shadow-none focus-visible:ring-0 placeholder:text-gray-400 dark:placeholder:text-gray-500 bg-transparent"
+                        />
+                    </div>
+
                     {/* Mood Selector */}
                     <Card>
                         <CardContent className="p-4">

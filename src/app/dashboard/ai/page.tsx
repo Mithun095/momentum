@@ -180,6 +180,7 @@ export default function AiAssistantPage() {
 
     const [activeConversationId, setActiveConversationId] = useState<string | null>(null)
     const [inputMessage, setInputMessage] = useState('')
+    const [voicePartial, setVoicePartial] = useState('')
     const [isCreatingConversation, setIsCreatingConversation] = useState(false)
     const [hasConsent, setHasConsent] = useState<boolean | null>(null)
 
@@ -256,9 +257,39 @@ export default function AiAssistantPage() {
         createConversationMutation.mutate({})
     }
 
-    const handleSendMessage = (message?: string) => {
+    const handleSendMessage = async (message?: string) => {
         const content = message || inputMessage
-        if (!content.trim() || !activeConversationId) return
+        if (!content.trim()) return
+
+        console.log('[AI Chat] handleSendMessage called', { content: content.slice(0, 30), activeConversationId })
+
+        // Auto-create conversation if none exists
+        if (!activeConversationId) {
+            console.log('[AI Chat] No active conversation, creating new one...')
+            setIsCreatingConversation(true)
+            try {
+                const newConversation = await createConversationMutation.mutateAsync({})
+                console.log('[AI Chat] Created conversation:', newConversation.id)
+
+                // Now send message with the new conversation ID
+                console.log('[AI Chat] Sending message to new conversation...')
+                await sendMessageMutation.mutateAsync({
+                    conversationId: newConversation.id,
+                    content: content.trim()
+                })
+                setInputMessage('')
+                console.log('[AI Chat] Message sent successfully')
+            } catch (error) {
+                console.error('[AI Chat] Error in auto-create flow:', error)
+                // Error handled by mutation's onError
+            } finally {
+                setIsCreatingConversation(false)
+            }
+            return
+        }
+
+        // Send to existing conversation
+        console.log('[AI Chat] Sending to existing conversation:', activeConversationId)
         sendMessageMutation.mutate({
             conversationId: activeConversationId,
             content: content.trim()
@@ -268,6 +299,11 @@ export default function AiAssistantPage() {
 
     const handleVoiceTranscript = (text: string) => {
         setInputMessage(prev => prev + (prev ? ' ' : '') + text)
+        setVoicePartial('')
+    }
+
+    const handlePartialTranscript = (text: string) => {
+        setVoicePartial(text)
     }
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -488,11 +524,15 @@ export default function AiAssistantPage() {
                                 <div className="flex gap-2">
                                     <VoiceInput
                                         onTranscript={handleVoiceTranscript}
+                                        onPartialTranscript={handlePartialTranscript}
                                         disabled={sendMessageMutation.isPending}
                                     />
                                     <textarea
-                                        value={inputMessage}
-                                        onChange={(e) => setInputMessage(e.target.value)}
+                                        value={inputMessage + (voicePartial ? (inputMessage ? ' ' : '') + voicePartial : '')}
+                                        onChange={(e) => {
+                                            setInputMessage(e.target.value)
+                                            setVoicePartial('')
+                                        }}
                                         onKeyDown={handleKeyDown}
                                         placeholder="Ask me to create a task, suggest habits, or show your progress..."
                                         rows={1}

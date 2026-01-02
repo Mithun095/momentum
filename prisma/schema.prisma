@@ -119,6 +119,7 @@ model Habit {
   completions HabitCompletion[]
   analytics   HabitAnalytics[]
 
+  @@index([userId])
   @@map("habits")
 }
 
@@ -159,6 +160,7 @@ model JournalEntry {
   id              String   @id @default(cuid())
   userId          String
   entryDate       DateTime @db.Date
+  title           String?  // Optional entry title
   mainContent     String   @db.Text
   voiceTranscript String?  @db.Text
   mood            String?  // "happy", "sad", "neutral", etc.
@@ -223,6 +225,8 @@ model Task {
   user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   reminders TaskReminder[]
 
+  @@index([userId])
+  @@index([userId, dueDate])
   @@map("tasks")
 }
 
@@ -317,6 +321,7 @@ model AiConversation {
   user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   messages AiMessage[]
 
+  @@index([userId])
   @@map("ai_conversations")
 }
 
