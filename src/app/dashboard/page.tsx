@@ -7,6 +7,8 @@ import Link from 'next/link'
 import { TodayHabits } from '@/components/habits/TodayHabits'
 import { api } from '@/lib/trpc/client'
 import { Badge } from '@/components/ui/badge'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
+import { MobileNav } from '@/components/ui/mobile-nav'
 
 export default function DashboardPage() {
     const { data: session, status } = useSession()
@@ -47,27 +49,37 @@ export default function DashboardPage() {
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
             {/* Top Navigation */}
-            <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+            <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700" role="navigation" aria-label="Main navigation">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
-                        <div className="flex items-center gap-8">
+                        <div className="flex items-center gap-4">
+                            {/* Mobile Navigation */}
+                            <MobileNav userName={session.user?.name} userEmail={session.user?.email} />
+
                             <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                                 Dashboard
                             </h1>
                             <div className="hidden md:flex items-center gap-4">
                                 <Link
+                                    href="/dashboard/analytics"
+                                    className="text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors"
+                                >
+                                    📊 Analytics
+                                </Link>
+                                <Link
                                     href="/dashboard/ai"
                                     className="text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors"
                                 >
-                                    AI Assistant
+                                    🤖 AI Assistant
                                 </Link>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
-                            <span className="text-sm text-gray-600 dark:text-gray-400">
+                            <ThemeToggle />
+                            <span className="hidden sm:inline text-sm text-gray-600 dark:text-gray-400">
                                 {session.user?.name || session.user?.email}
                             </span>
-                            <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-300 text-sm font-medium">
+                            <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-300 text-sm font-medium" aria-label={`User avatar for ${session.user?.name || 'User'}`}>
                                 {session.user?.name?.[0]?.toUpperCase() || 'U'}
                             </div>
                         </div>

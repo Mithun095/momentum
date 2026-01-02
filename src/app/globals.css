@@ -119,7 +119,228 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* ============================================
+   CRAZY MODE - Advanced Animations & Effects
+   ============================================ */
+
+/* Crazy Mode Color Overrides */
+.crazy {
+  --background: oklch(0.12 0.02 280);
+  --foreground: oklch(0.95 0.03 300);
+  --card: oklch(0.15 0.03 290);
+  --card-foreground: oklch(0.95 0.03 300);
+  --primary: oklch(0.7 0.25 330);
+  --primary-foreground: oklch(0.98 0 0);
+  --secondary: oklch(0.25 0.05 270);
+  --accent: oklch(0.6 0.2 200);
+  --muted: oklch(0.2 0.03 280);
+  --muted-foreground: oklch(0.7 0.05 290);
+  --border: oklch(0.3 0.08 300 / 50%);
+}
+
+/* Animated Gradient Background for Crazy Mode */
+.crazy body {
+  background: linear-gradient(-45deg,
+      oklch(0.15 0.04 280),
+      oklch(0.12 0.05 320),
+      oklch(0.14 0.04 260),
+      oklch(0.11 0.05 300));
+  background-size: 400% 400%;
+  animation: gradient-shift 15s ease infinite;
+}
+
+/* Gradient Animation Keyframes */
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Gradient X Animation for buttons */
+@keyframes gradient-x {
+
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-gradient-x {
+  background-size: 200% 200%;
+  animation: gradient-x 3s ease infinite;
+}
+
+/* Glow Effect */
+@keyframes glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 5px oklch(0.7 0.25 330 / 50%),
+      0 0 10px oklch(0.7 0.25 330 / 30%),
+      0 0 15px oklch(0.7 0.25 330 / 20%);
+  }
+
+  50% {
+    box-shadow: 0 0 10px oklch(0.7 0.25 330 / 80%),
+      0 0 20px oklch(0.7 0.25 330 / 50%),
+      0 0 30px oklch(0.7 0.25 330 / 30%);
+  }
+}
+
+.crazy .glow,
+.crazy button:hover,
+.crazy a:hover {
+  animation: glow 2s ease-in-out infinite;
+}
+
+/* Shimmer Effect */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.crazy .shimmer {
+  background: linear-gradient(90deg,
+      transparent,
+      oklch(0.8 0.1 300 / 20%),
+      transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Pulse Effect for Cards in Crazy Mode */
+@keyframes crazy-pulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 4px 6px -1px oklch(0 0 0 / 10%);
+  }
+
+  50% {
+    transform: scale(1.01);
+    box-shadow: 0 10px 15px -3px oklch(0.7 0.2 300 / 20%);
+  }
+}
+
+.crazy .animate-crazy-pulse {
+  animation: crazy-pulse 3s ease-in-out infinite;
+}
+
+/* Rainbow Border on Focus */
+@keyframes rainbow-border {
+  0% {
+    border-color: oklch(0.7 0.25 0);
+  }
+
+  17% {
+    border-color: oklch(0.7 0.25 60);
+  }
+
+  33% {
+    border-color: oklch(0.7 0.25 120);
+  }
+
+  50% {
+    border-color: oklch(0.7 0.25 180);
+  }
+
+  67% {
+    border-color: oklch(0.7 0.25 240);
+  }
+
+  83% {
+    border-color: oklch(0.7 0.25 300);
+  }
+
+  100% {
+    border-color: oklch(0.7 0.25 360);
+  }
+}
+
+.crazy input:focus,
+.crazy textarea:focus,
+.crazy select:focus {
+  animation: rainbow-border 3s linear infinite;
+  border-width: 2px;
+}
+
+/* Floating Animation */
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.crazy .float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Neon Text Effect */
+.crazy .neon-text {
+  text-shadow:
+    0 0 5px oklch(0.8 0.3 330),
+    0 0 10px oklch(0.8 0.3 330),
+    0 0 20px oklch(0.8 0.3 330);
+}
+
+/* Enhanced Card Hover in Crazy Mode */
+.crazy [class*="rounded-xl"] {
+  transition: all 0.3s ease;
+  border: 1px solid oklch(0.5 0.15 300 / 30%);
+}
+
+.crazy [class*="rounded-xl"]:hover {
+  border-color: oklch(0.7 0.25 330 / 60%);
+  transform: translateY(-2px);
+}
+
+/* Crazy Mode Nav Enhancement */
+.crazy nav {
+  background: linear-gradient(90deg,
+      oklch(0.15 0.04 280),
+      oklch(0.18 0.05 310),
+      oklch(0.15 0.04 280));
+  background-size: 200% 100%;
+  animation: gradient-x 10s ease infinite;
+}
+
+/* Smooth transitions for theme switching */
+html {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body,
+nav,
+[class*="bg-"] {
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }

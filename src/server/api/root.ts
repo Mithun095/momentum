@@ -5,6 +5,7 @@ import { taskRouter } from './routers/task'
 import { workspaceRouter } from './routers/workspace'
 import { sharedHabitRouter } from './routers/sharedHabit'
 import { aiRouter } from './routers/ai'
+import { analyticsRouter } from './routers/analytics'
 
 export const appRouter = createTRPCRouter({
     habit: habitRouter,
@@ -13,6 +14,7 @@ export const appRouter = createTRPCRouter({
     workspace: workspaceRouter,
     sharedHabit: sharedHabitRouter,
     ai: aiRouter,
+    analytics: analyticsRouter,
 })
 
 export type AppRouter = typeof appRouter
