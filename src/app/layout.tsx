@@ -4,6 +4,7 @@ import "./globals.css";
 import { TRPCProvider } from "@/lib/trpc/client";
 import { Providers } from "@/components/providers/SessionProvider";
 import { Toaster } from "@/components/ui/toaster";
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,13 +19,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <Providers>
-          <TRPCProvider>{children}</TRPCProvider>
+          <TRPCProvider>
+            <ThemeProvider>
+              {children}
+            </ThemeProvider>
+          </TRPCProvider>
           <Toaster />
         </Providers>
       </body>
     </html>
   );
 }
+

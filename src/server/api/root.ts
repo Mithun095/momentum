@@ -10,6 +10,7 @@ import { analyticsRouter } from './routers/analytics'
 import { eventRouter } from './routers/event'
 import { goalRouter } from './routers/goal'
 import { dataRouter } from './routers/data'
+import { streakRouter } from './routers/streak'
 
 export const appRouter = createTRPCRouter({
     habit: habitRouter,
@@ -23,6 +24,8 @@ export const appRouter = createTRPCRouter({
     event: eventRouter,
     goal: goalRouter,
     data: dataRouter,
+    streak: streakRouter,
 })
 
 export type AppRouter = typeof appRouter
+

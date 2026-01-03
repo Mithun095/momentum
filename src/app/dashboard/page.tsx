@@ -1,265 +1,357 @@
 'use client'
 
-import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { TodayHabits } from '@/components/habits/TodayHabits'
-import { api } from '@/lib/trpc/client'
+import { useSession } from 'next-auth/react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ThemeToggle } from '@/components/ui/theme-toggle'
-import { MobileNav } from '@/components/ui/mobile-nav'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Navbar } from '@/components/layout/Navbar'
+import { AIFloatingButton } from '@/components/ai/AIFloatingButton'
+import { EventCalendar } from '@/components/events/EventCalendar'
+import { CreateEventModal } from '@/components/events/CreateEventModal'
+import { api } from '@/lib/trpc/client'
+import {
+    CheckCircle2,
+    Circle,
+    Plus,
+    ChevronRight,
+    BookOpen,
+    ListTodo,
+    Target,
+    Calendar,
+    Sparkles,
+} from 'lucide-react'
+import { format, startOfMonth, endOfMonth, startOfDay, endOfDay } from 'date-fns'
 
 export default function DashboardPage() {
     const { data: session, status } = useSession()
-    const router = useRouter()
-    const { data: dashboardData, isLoading } = api.dashboard.getData.useQuery(undefined, {
-        enabled: !!session,
+    const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+    const [createEventOpen, setCreateEventOpen] = useState(false)
+
+    // Date range for current month events
+    const { monthStart, monthEnd } = useMemo(() => ({
+        monthStart: startOfMonth(new Date()),
+        monthEnd: endOfMonth(new Date()),
+    }), [])
+
+    // Today's date range
+    const { todayStart, todayEnd } = useMemo(() => ({
+        todayStart: startOfDay(new Date()),
+        todayEnd: endOfDay(new Date()),
+    }), [])
+
+    // Queries
+    const { data: habits, isLoading: habitsLoading } = api.habit.getAll.useQuery()
+    const { data: completions } = api.habit.getAllCompletions.useQuery(
+        { startDate: todayStart, endDate: todayEnd },
+        { enabled: !!habits && habits.length > 0 }
+    )
+    const { data: tasks, isLoading: tasksLoading } = api.task.getToday.useQuery()
+    const { data: events } = api.event.getByMonth.useQuery({
+        year: new Date().getFullYear(),
+        month: new Date().getMonth() + 1,
+    })
+    const { data: goals } = api.goal.getActive.useQuery()
+
+    const utils = api.useUtils()
+
+    // Complete habit mutation
+    const completeHabit = api.habit.markComplete.useMutation({
+        onSuccess: () => {
+            void utils.habit.getAllCompletions.invalidate()
+        },
     })
 
-    useEffect(() => {
-        if (status === 'unauthenticated') {
-            router.push('/auth/signin')
-        }
-    }, [status, router])
+    // Map of completed habits today
+    const completedToday = useMemo(() => {
+        if (!completions) return new Set<string>()
+        return new Set(completions.map(c => c.habitId))
+    }, [completions])
 
-    if (status === 'loading' || isLoading) {
+    // Stats
+    const completedHabitsCount = completedToday.size
+    const totalHabitsCount = habits?.length ?? 0
+    const pendingTasksCount = tasks?.filter(t => t.status === 'pending').length ?? 0
+    const activeGoalsCount = goals?.length ?? 0
+
+    // Handle date click on calendar
+    const handleDateClick = (date: Date) => {
+        setSelectedDate(date)
+        setCreateEventOpen(true)
+    }
+
+    // Handle event click
+    const handleEventClick = (event: { id: string }) => {
+        // Could open edit modal here
+    }
+
+    // Calendar events formatted
+    const calendarEvents = useMemo(() => {
+        return events?.map(e => ({
+            ...e,
+            startTime: new Date(e.startTime),
+            endTime: new Date(e.endTime),
+        })) ?? []
+    }, [events])
+
+    const greeting = () => {
+        const hour = new Date().getHours()
+        if (hour < 12) return 'Good morning'
+        if (hour < 17) return 'Good afternoon'
+        return 'Good evening'
+    }
+
+    if (status === 'loading') {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary/50 mx-auto mb-4"></div>
-                    <p className="text-gray-600 dark:text-gray-400 animate-pulse">Loading experience...</p>
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+                <Navbar />
+                <div className="max-w-7xl mx-auto px-4 py-8">
+                    <Skeleton className="h-12 w-64 mb-8" />
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        <div className="lg:col-span-4 space-y-6">
+                            <Skeleton className="h-48" />
+                            <Skeleton className="h-64" />
+                        </div>
+                        <div className="lg:col-span-8">
+                            <Skeleton className="h-[500px]" />
+                        </div>
+                    </div>
                 </div>
             </div>
         )
     }
 
-    if (!session) {
-        return null
-    }
-
-    const { habits, todayTasks, taskStats, journalStats } = dashboardData || {}
-    const habitCount = habits?.length || 0
-
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-            {/* Top Navigation */}
-            <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700" role="navigation" aria-label="Main navigation">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between items-center h-16">
-                        <div className="flex items-center gap-4">
-                            {/* Mobile Navigation */}
-                            <MobileNav userName={session.user?.name} userEmail={session.user?.email} />
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-50 to-indigo-50/30 dark:from-gray-950 dark:via-gray-950 dark:to-indigo-950/20">
+            <Navbar />
 
-                            <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                                Dashboard
-                            </h1>
-                            <div className="hidden md:flex items-center gap-4">
-                                <Link
-                                    href="/dashboard/analytics"
-                                    className="text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors"
-                                >
-                                    📊 Analytics
-                                </Link>
-                                <Link
-                                    href="/dashboard/goals"
-                                    className="text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors"
-                                >
-                                    🎯 Goals
-                                </Link>
-                                <Link
-                                    href="/dashboard/events"
-                                    className="text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors"
-                                >
-                                    📅 Events
-                                </Link>
-                                <Link
-                                    href="/dashboard/workspace"
-                                    className="text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors"
-                                >
-                                    👥 Workspaces
-                                </Link>
-                                <Link
-                                    href="/dashboard/ai"
-                                    className="text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors"
-                                >
-                                    🤖 AI
-                                </Link>
-                                <Link
-                                    href="/dashboard/settings"
-                                    className="text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors"
-                                >
-                                    ⚙️ Settings
-                                </Link>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <ThemeToggle />
-                            <span className="hidden sm:inline text-sm text-gray-600 dark:text-gray-400">
-                                {session.user?.name || session.user?.email}
-                            </span>
-                            <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-300 text-sm font-medium" aria-label={`User avatar for ${session.user?.name || 'User'}`}>
-                                {session.user?.name?.[0]?.toUpperCase() || 'U'}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </nav>
-
-            {/* Main Content */}
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="mb-6">
-                    <p className="text-gray-600 dark:text-gray-400">
-                        Welcome back, {session.user?.name?.split(' ')[0] || 'there'}. Here's your overview.
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {/* Greeting */}
+                <div className="mb-8">
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                        {greeting()}, {session?.user?.name?.split(' ')[0] || 'there'}! 👋
+                    </h1>
+                    <p className="text-gray-600 dark:text-gray-400 mt-1">
+                        Here's your overview for today
                     </p>
                 </div>
 
-                {/* Quick Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                {/* Quick Stats Row */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                     <Link href="/dashboard/habits">
-                        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow cursor-pointer group">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Habits</p>
-                                    <p className="text-3xl font-bold text-gray-900 dark:text-white group-hover:scale-110 transition-transform origin-left">{habitCount}</p>
+                        <Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-green-500">
+                            <CardContent className="p-4">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                                            {completedHabitsCount}/{totalHabitsCount}
+                                        </p>
+                                        <p className="text-sm text-gray-500">Habits</p>
+                                    </div>
+                                    <CheckCircle2 className="h-8 w-8 text-green-500 opacity-50" />
                                 </div>
-                                <div className="text-4xl">✅</div>
-                            </div>
-                        </div>
-                    </Link>
-
-                    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Current Streak</p>
-                                <p className="text-3xl font-bold text-gray-900 dark:text-white">0</p>
-                            </div>
-                            <div className="text-4xl">🔥</div>
-                        </div>
-                    </div>
-
-                    <Link href="/dashboard/journal">
-                        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow cursor-pointer group">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Journal Entries</p>
-                                    <p className="text-3xl font-bold text-gray-900 dark:text-white group-hover:scale-110 transition-transform origin-left">
-                                        {journalStats?.totalEntries || 0}
-                                    </p>
-                                </div>
-                                <div className="text-4xl">📔</div>
-                            </div>
-                        </div>
+                            </CardContent>
+                        </Card>
                     </Link>
 
                     <Link href="/dashboard/tasks">
-                        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow cursor-pointer">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Tasks Today</p>
-                                    <div className="flex items-center gap-2">
-                                        <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                                            {taskStats?.todayTasks || 0}
+                        <Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-blue-500">
+                            <CardContent className="p-4">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                                            {pendingTasksCount}
                                         </p>
-                                        {taskStats?.overdue && taskStats.overdue > 0 && (
-                                            <Badge className="bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300">
-                                                {taskStats.overdue} overdue
-                                            </Badge>
-                                        )}
+                                        <p className="text-sm text-gray-500">Tasks</p>
                                     </div>
+                                    <ListTodo className="h-8 w-8 text-blue-500 opacity-50" />
                                 </div>
-                                <div className="text-4xl">📋</div>
-                            </div>
-                        </div>
+                            </CardContent>
+                        </Card>
+                    </Link>
+
+                    <Link href="/dashboard/goals">
+                        <Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-purple-500">
+                            <CardContent className="p-4">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                                            {activeGoalsCount}
+                                        </p>
+                                        <p className="text-sm text-gray-500">Goals</p>
+                                    </div>
+                                    <Target className="h-8 w-8 text-purple-500 opacity-50" />
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </Link>
+
+                    <Link href="/dashboard/journal">
+                        <Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-orange-500">
+                            <CardContent className="p-4">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                                            📖
+                                        </p>
+                                        <p className="text-sm text-gray-500">Journal</p>
+                                    </div>
+                                    <BookOpen className="h-8 w-8 text-orange-500 opacity-50" />
+                                </div>
+                            </CardContent>
+                        </Card>
                     </Link>
                 </div>
 
-                {/* Today's Tasks Widget */}
-                {todayTasks && todayTasks.length > 0 && (
-                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-8">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                                Today's Tasks
-                            </h3>
-                            <Link href="/dashboard/tasks" className="text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200">
-                                View all →
-                            </Link>
-                        </div>
-                        <div className="space-y-3">
-                            {todayTasks.slice(0, 5).map((task) => (
-                                <div
-                                    key={task.id}
-                                    className={`flex items-center gap-3 p-3 rounded-lg border ${task.status === 'completed'
-                                        ? 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600'
-                                        : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
-                                        }`}
-                                >
-                                    <div className={`w-4 h-4 rounded-full border-2 ${task.status === 'completed'
-                                        ? 'bg-green-500 border-green-500'
-                                        : task.priority === 'high'
-                                            ? 'border-red-500'
-                                            : task.priority === 'medium'
-                                                ? 'border-yellow-500'
-                                                : 'border-gray-400'
-                                        }`} />
-                                    <span className={`flex-1 ${task.status === 'completed'
-                                        ? 'line-through text-gray-500 dark:text-gray-400'
-                                        : 'text-gray-900 dark:text-gray-100'
-                                        }`}>
-                                        {task.title}
-                                    </span>
+                {/* Main Content Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    {/* Left Sidebar */}
+                    <div className="lg:col-span-4 space-y-6">
+                        {/* Today's Habits */}
+                        <Card>
+                            <CardHeader className="pb-3">
+                                <div className="flex items-center justify-between">
+                                    <CardTitle className="text-lg font-semibold">Today's Habits</CardTitle>
+                                    <Link href="/dashboard/habits">
+                                        <Button variant="ghost" size="sm">
+                                            <ChevronRight className="h-4 w-4" />
+                                        </Button>
+                                    </Link>
                                 </div>
-                            ))}
-                        </div>
+                            </CardHeader>
+                            <CardContent className="space-y-2">
+                                {habitsLoading ? (
+                                    Array.from({ length: 3 }).map((_, i) => (
+                                        <Skeleton key={i} className="h-12" />
+                                    ))
+                                ) : habits && habits.length > 0 ? (
+                                    habits.slice(0, 5).map((habit) => {
+                                        const isCompleted = completedToday.has(habit.id)
+                                        return (
+                                            <div
+                                                key={habit.id}
+                                                className={`
+                                                    flex items-center gap-3 p-3 rounded-lg border transition-colors cursor-pointer
+                                                    ${isCompleted
+                                                        ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                                                        : 'hover:bg-gray-50 dark:hover:bg-gray-800 border-gray-200 dark:border-gray-700'
+                                                    }
+                                                `}
+                                                onClick={() => {
+                                                    if (!isCompleted) {
+                                                        completeHabit.mutate({ habitId: habit.id, date: new Date() })
+                                                    }
+                                                }}
+                                            >
+                                                {isCompleted ? (
+                                                    <CheckCircle2 className="h-5 w-5 text-green-600" />
+                                                ) : (
+                                                    <Circle className="h-5 w-5 text-gray-400" />
+                                                )}
+                                                <span className={`flex-1 ${isCompleted ? 'line-through text-gray-500' : 'text-gray-900 dark:text-white'}`}>
+                                                    {habit.name}
+                                                </span>
+                                            </div>
+                                        )
+                                    })
+                                ) : (
+                                    <div className="text-center py-6 text-gray-500">
+                                        <p>No habits yet</p>
+                                        <Link href="/dashboard/habits">
+                                            <Button variant="link" size="sm">Create one</Button>
+                                        </Link>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        {/* Quick Tasks */}
+                        <Card>
+                            <CardHeader className="pb-3">
+                                <div className="flex items-center justify-between">
+                                    <CardTitle className="text-lg font-semibold">Today's Tasks</CardTitle>
+                                    <Link href="/dashboard/tasks">
+                                        <Button variant="ghost" size="sm">
+                                            <ChevronRight className="h-4 w-4" />
+                                        </Button>
+                                    </Link>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="space-y-2">
+                                {tasksLoading ? (
+                                    Array.from({ length: 3 }).map((_, i) => (
+                                        <Skeleton key={i} className="h-12" />
+                                    ))
+                                ) : tasks && tasks.length > 0 ? (
+                                    tasks.slice(0, 5).map((task) => (
+                                        <div
+                                            key={task.id}
+                                            className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+                                        >
+                                            <div className={`
+                                                w-2 h-2 rounded-full
+                                                ${task.priority === 'high' ? 'bg-red-500' :
+                                                    task.priority === 'medium' ? 'bg-yellow-500' : 'bg-gray-400'}
+                                            `} />
+                                            <span className="flex-1 text-gray-900 dark:text-white truncate">
+                                                {task.title}
+                                            </span>
+                                            <Badge variant="secondary" className="text-xs">
+                                                {task.priority}
+                                            </Badge>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="text-center py-6 text-gray-500">
+                                        <p>No tasks for today</p>
+                                        <Link href="/dashboard/tasks">
+                                            <Button variant="link" size="sm">Add one</Button>
+                                        </Link>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
                     </div>
-                )}
 
-                {/* Today's Habits Widget */}
-                <div className="mb-8">
-                    <TodayHabits />
-                </div>
-
-                {/* Quick Actions */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8">
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
-                        Quick Actions
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <Link href="/dashboard/habits">
-                            <button className="w-full p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                                <div className="text-3xl mb-2">➕</div>
-                                <p className="font-medium text-gray-900 dark:text-white">Add Habit</p>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">Start tracking a new habit</p>
-                            </button>
-                        </Link>
-
-                        <Link href={`/dashboard/journal/${new Date().toISOString().split('T')[0]}`}>
-                            <button className="w-full p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                                <div className="text-3xl mb-2">📝</div>
-                                <p className="font-medium text-gray-900 dark:text-white">Write Journal</p>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">Capture your thoughts</p>
-                            </button>
-                        </Link>
-
-                        <Link href="/dashboard/tasks">
-                            <button className="w-full p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                                <div className="text-3xl mb-2">✓</div>
-                                <p className="font-medium text-gray-900 dark:text-white">Add Task</p>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">Plan your next action</p>
-                            </button>
-                        </Link>
-
-                        <Link href="/dashboard/ai">
-                            <button className="w-full p-6 border-2 border-dashed border-purple-300 dark:border-purple-600/50 rounded-lg hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors">
-                                <div className="text-3xl mb-2">🤖</div>
-                                <p className="font-medium text-gray-900 dark:text-white">Ask AI</p>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">Get insights & advice</p>
-                            </button>
-                        </Link>
+                    {/* Right: Calendar */}
+                    <div className="lg:col-span-8">
+                        <Card className="h-full">
+                            <CardHeader className="pb-2">
+                                <div className="flex items-center justify-between">
+                                    <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                                        <Calendar className="h-5 w-5 text-indigo-500" />
+                                        Calendar
+                                    </CardTitle>
+                                    <Link href="/dashboard/events">
+                                        <Button variant="outline" size="sm">
+                                            View All Events
+                                        </Button>
+                                    </Link>
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <EventCalendar
+                                    events={calendarEvents}
+                                    onDateClick={handleDateClick}
+                                    onEventClick={handleEventClick}
+                                />
+                            </CardContent>
+                        </Card>
                     </div>
                 </div>
-            </div>
+            </main>
+
+            {/* AI Floating Button */}
+            <AIFloatingButton />
+
+            {/* Create Event Modal */}
+            <CreateEventModal
+                open={createEventOpen}
+                onOpenChange={setCreateEventOpen}
+                defaultDate={selectedDate ?? undefined}
+            />
         </div>
     )
 }
-
