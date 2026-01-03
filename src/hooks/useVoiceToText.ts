@@ -1,9 +1,6 @@
 'use client'
 
 import { useState, useCallback, useEffect, useRef } from 'react'
-// Singleton model reference to prevent reloading
-let globalModel: any = null
-let modelLoadingPromise: Promise<any> | null = null
 
 interface UseVoiceToTextReturn {
     isListening: boolean
@@ -22,149 +19,119 @@ export function useVoiceToText(): UseVoiceToTextReturn {
     const [transcript, setTranscript] = useState('')
     const [interimTranscript, setInterimTranscript] = useState('')
     const [error, setError] = useState<string | null>(null)
-    const [isModelLoading, setIsModelLoading] = useState(false)
     const [isSupported, setIsSupported] = useState(false)
 
-    const recognizerRef = useRef<any>(null)
-    const audioContextRef = useRef<AudioContext | null>(null)
-    const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null)
-    const processorRef = useRef<ScriptProcessorNode | null>(null)
-    const streamRef = useRef<MediaStream | null>(null)
+    // Recognition instance ref
+    const recognitionRef = useRef<any>(null)
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
-            const isSecure = window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-            setIsSupported(isSecure)
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+            setIsSupported(!!SpeechRecognition)
         }
 
-        // Cleanup on unmount
         return () => {
-            stopListening()
+            if (recognitionRef.current) {
+                try { recognitionRef.current.stop() } catch (e) { }
+            }
         }
     }, [])
-
-    const loadModel = async () => {
-        if (globalModel) return globalModel
-        if (modelLoadingPromise) return modelLoadingPromise
-
-        setIsModelLoading(true)
-        modelLoadingPromise = (async () => {
-            try {
-                // @ts-ignore
-                const Vosk = await import('vosk-browser')
-                const model = await Vosk.createModel('/models/model.zip')
-                model.setLogLevel(-1)
-                globalModel = model
-                return model
-            } catch (err) {
-                console.error('Failed to load Vosk model:', err)
-                setError('Failed to load voice model')
-                throw err
-            } finally {
-                setIsModelLoading(false)
-            }
-        })()
-
-        return modelLoadingPromise
-    }
 
     const startListening = useCallback(async () => {
         setError(null)
 
         if (!isSupported) {
-            setError('Voice requires HTTPS or localhost')
+            setError('Speech Recognition is not supported in this browser.')
             return
         }
 
+        if (isListening) return
+
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                audio: {
-                    echoCancellation: true,
-                    noiseSuppression: true,
-                    channelCount: 1,
-                    sampleRate: 16000
-                }
-            })
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+            const recognition = new SpeechRecognition()
 
-            streamRef.current = stream
+            recognition.continuous = true
+            recognition.interimResults = true
+            recognition.lang = 'en-US' // Default to English, could be configurable
 
-            const model = await loadModel()
-            const recognizer = new model.KaldiRecognizer(16000)
+            recognition.onstart = () => {
+                setIsListening(true)
+            }
 
-            recognizer.on('result', (message: any) => {
-                const text = message.result?.text
-                if (text && text.trim()) {
-                    setTranscript(prev => prev + (prev ? ' ' : '') + text)
-                    setInterimTranscript('')
-                }
-            })
+            recognition.onresult = (event: any) => {
+                let final = ''
+                let interim = ''
 
-            recognizer.on('partialresult', (message: any) => {
-                const partial = message.result?.partial
-                if (partial) {
-                    setInterimTranscript(partial)
-                }
-            })
-
-            recognizerRef.current = recognizer
-
-            const audioContext = new AudioContext({ sampleRate: 16000 })
-            const source = audioContext.createMediaStreamSource(stream)
-            const processor = audioContext.createScriptProcessor(4096, 1, 1)
-
-            processor.onaudioprocess = (event) => {
-                if (recognizerRef.current && isListening) {
-                    try {
-                        const inputData = event.inputBuffer.getChannelData(0)
-                        recognizerRef.current.acceptWaveform(inputData)
-                    } catch (e) {
-                        // ignore
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        final += event.results[i][0].transcript
+                    } else {
+                        interim += event.results[i][0].transcript
                     }
+                }
+
+                if (final) {
+                    setTranscript(prev => prev + (prev ? ' ' : '') + final)
+                }
+                setInterimTranscript(interim)
+            }
+
+            recognition.onerror = (event: any) => {
+                console.error('Speech recognition error', event.error)
+                let message = `Error: ${event.error}`
+
+                switch (event.error) {
+                    case 'network':
+                        message = 'Connection error. Check internet.'
+                        break
+                    case 'not-allowed':
+                    case 'service-not-allowed':
+                        message = 'Microphone access denied.'
+                        setIsListening(false)
+                        break
+                    case 'no-speech':
+                        message = 'No speech detected.'
+                        break
+                    case 'audio-capture':
+                        message = 'No microphone found.'
+                        break
+                }
+
+                setError(message)
+                if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+                    setIsListening(false)
                 }
             }
 
-            source.connect(processor)
-            processor.connect(audioContext.destination)
+            recognition.onend = () => {
+                // If we didn't manually stop (and no error), we might want to restart?
+                // For now, let's just update state. The logic often restarts automatically if continuous.
+                // But typically onend fires when it stops.
+                // We'll set listening to false unless implementation keeps it alive.
+                setIsListening(false)
+            }
 
-            audioContextRef.current = audioContext
-            sourceRef.current = source
-            processorRef.current = processor
+            recognitionRef.current = recognition
+            recognition.start()
 
-            setIsListening(true)
-        } catch (err) {
-            console.error('Error starting recording:', err)
-            setError(err instanceof Error ? err.message : 'Could not access microphone')
-            stopListening()
+        } catch (err: any) {
+            console.error('Failed to start speech recognition:', err)
+            setError(err.message || 'Failed to start microphone')
+            setIsListening(false)
         }
-    }, [isSupported, isListening]) // Added isListening to deps to allow proper state access inside audio process if needed, though ref is better
+    }, [isSupported, isListening])
 
     const stopListening = useCallback(() => {
+        if (recognitionRef.current) {
+            try {
+                recognitionRef.current.stop()
+            } catch (e) {
+                // ignore
+            }
+        }
         setIsListening(false)
-
-        if (streamRef.current) {
-            streamRef.current.getTracks().forEach(track => track.stop())
-            streamRef.current = null
-        }
-
-        if (processorRef.current) {
-            try { processorRef.current.disconnect() } catch (e) { }
-            processorRef.current = null
-        }
-
-        if (sourceRef.current) {
-            try { sourceRef.current.disconnect() } catch (e) { }
-            sourceRef.current = null
-        }
-
-        if (audioContextRef.current) {
-            try { audioContextRef.current.close() } catch (e) { }
-            audioContextRef.current = null
-        }
-
-        if (recognizerRef.current) {
-            try { recognizerRef.current.free() } catch (e) { }
-            recognizerRef.current = null
-        }
+        setInterimTranscript('')
     }, [])
 
     const resetTranscript = useCallback(() => {
@@ -181,6 +148,6 @@ export function useVoiceToText(): UseVoiceToTextReturn {
         stopListening,
         resetTranscript,
         error,
-        isModelLoading
+        isModelLoading: false // Native API doesn't load a model
     }
 }

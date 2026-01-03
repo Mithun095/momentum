@@ -18,7 +18,8 @@ import {
     Check,
     Sun,
     Moon,
-    Stars
+    Stars,
+    Sunrise
 } from 'lucide-react'
 import { api } from '@/lib/trpc/client'
 import { format } from 'date-fns'
@@ -28,6 +29,7 @@ const themeIcons = {
     light: Sun,
     dark: Moon,
     midnight: Stars,
+    sunrise: Sunrise,
 }
 
 export function Navbar() {

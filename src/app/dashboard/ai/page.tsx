@@ -13,7 +13,6 @@ import {
 import { format } from 'date-fns'
 import ReactMarkdown from 'react-markdown'
 import { ToolActionCard } from '@/components/ai/ToolActionCard'
-import { VoiceInput } from '@/components/ai/VoiceInput'
 import { ConsentBanner } from '@/components/ai/ConsentBanner'
 
 interface ToolCall {
@@ -177,10 +176,10 @@ export default function AiAssistantPage() {
     const router = useRouter()
     const { toast } = useToast()
     const messagesEndRef = useRef<HTMLDivElement>(null)
+    const utils = api.useUtils()
 
     const [activeConversationId, setActiveConversationId] = useState<string | null>(null)
     const [inputMessage, setInputMessage] = useState('')
-    const [voicePartial, setVoicePartial] = useState('')
     const [isCreatingConversation, setIsCreatingConversation] = useState(false)
     const [hasConsent, setHasConsent] = useState<boolean | null>(null)
 
@@ -215,6 +214,13 @@ export default function AiAssistantPage() {
             setInputMessage('')
             refetchActiveConversation()
             refetchConversations()
+
+            // Invalidate all relevant data to ensure UI is fresh
+            void utils.habit.getAll.invalidate()
+            void utils.habit.getStats.invalidate()
+            void utils.task.getAll.invalidate()
+            void utils.streak.getStreak.invalidate()
+            void utils.user.getStats.invalidate()
 
             // Notify about tool actions
             if (data.toolCalls && data.toolCalls.length > 0) {
@@ -297,14 +303,7 @@ export default function AiAssistantPage() {
         if (!message) setInputMessage('')
     }
 
-    const handleVoiceTranscript = (text: string) => {
-        setInputMessage(prev => prev + (prev ? ' ' : '') + text)
-        setVoicePartial('')
-    }
 
-    const handlePartialTranscript = (text: string) => {
-        setVoicePartial(text)
-    }
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -522,16 +521,10 @@ export default function AiAssistantPage() {
                             {/* Input */}
                             <div className="border-t border-gray-200 dark:border-gray-700 p-4">
                                 <div className="flex gap-2">
-                                    <VoiceInput
-                                        onTranscript={handleVoiceTranscript}
-                                        onPartialTranscript={handlePartialTranscript}
-                                        disabled={sendMessageMutation.isPending}
-                                    />
                                     <textarea
-                                        value={inputMessage + (voicePartial ? (inputMessage ? ' ' : '') + voicePartial : '')}
+                                        value={inputMessage}
                                         onChange={(e) => {
                                             setInputMessage(e.target.value)
-                                            setVoicePartial('')
                                         }}
                                         onKeyDown={handleKeyDown}
                                         placeholder="Ask me to create a task, suggest habits, or show your progress..."

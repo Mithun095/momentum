@@ -1,4 +1,3 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'
 import Groq from 'groq-sdk'
 import { Ollama } from 'ollama'
 import { AI_TOOLS } from './tools'
@@ -17,22 +16,53 @@ export interface AiResponse {
         args: Record<string, any>
         result?: unknown
     }>
+    provider?: string
 }
 
-type AIProvider = 'gemini' | 'groq' | 'ollama'
-
 // Configuration
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY
 const GROQ_API_KEY = process.env.GROQ_API_KEY
 const OLLAMA_HOST = process.env.OLLAMA_HOST || 'http://localhost:11434'
 
 // Clients
-const geminiClient = GEMINI_API_KEY ? new GoogleGenerativeAI(GEMINI_API_KEY) : null
 const groqClient = GROQ_API_KEY ? new Groq({ apiKey: GROQ_API_KEY }) : null
 const ollamaClient = new Ollama({ host: OLLAMA_HOST })
 
+// Map Gemini tools to OpenAI/Groq format
+// Map Tools to OpenAI/Groq Format (Convert uppercase types to lowercase)
+function convertSchema(schema: any): any {
+    if (!schema || typeof schema !== 'object') return schema
+
+    const newSchema = { ...schema }
+
+    if (newSchema.type === 'OBJECT') newSchema.type = 'object'
+    if (newSchema.type === 'STRING') newSchema.type = 'string'
+    if (newSchema.type === 'NUMBER') newSchema.type = 'number'
+    if (newSchema.type === 'BOOLEAN') newSchema.type = 'boolean'
+    if (newSchema.type === 'ARRAY') newSchema.type = 'array'
+
+    if (newSchema.properties) {
+        const newProperties: any = {}
+        for (const key in newSchema.properties) {
+            newProperties[key] = convertSchema(newSchema.properties[key])
+        }
+        newSchema.properties = newProperties
+    }
+
+    return newSchema
+}
+
+const GROQ_TOOLS = AI_TOOLS.map(tool => ({
+    type: 'function' as const,
+    function: {
+        name: tool.name,
+        description: tool.description,
+        parameters: convertSchema(tool.parameters)
+    }
+}))
+
 /**
  * Main AI generation function with Fallback Strategy
+ * Priority: Groq -> Ollama
  */
 export async function generateAiResponseWithStrategy(
     messages: AiMessage[],
@@ -41,25 +71,10 @@ export async function generateAiResponseWithStrategy(
 ): Promise<AiResponse> {
     const errors: Record<string, string> = {}
 
-    // 1. Try Gemini (Primary)
-    if (geminiClient) {
-        try {
-            console.log('[AI Client] Attempting Gemini...')
-            return await generateGeminiResponse(messages, userContext, db)
-        } catch (error) {
-            console.error('[AI Client] Gemini failed:', error)
-            errors['gemini'] = String(error)
-            // If it's a content safety policy or similar, we might want to stop
-            // But if it's a quota/500 error, fall through
-        }
-    } else {
-        errors['gemini'] = 'API Key missing'
-    }
-
-    // 2. Try Groq (Secondary)
+    // 1. Try Groq (Primary)
     if (groqClient) {
         try {
-            console.log('[AI Client] Attempting Groq (Fallback)...')
+            console.log('[AI Client] Attempting Groq (Primary)...')
             return await generateGroqResponse(messages, userContext, db)
         } catch (error) {
             console.error('[AI Client] Groq failed:', error)
@@ -69,9 +84,9 @@ export async function generateAiResponseWithStrategy(
         errors['groq'] = 'API Key missing'
     }
 
-    // 3. Try Ollama (Tertiary/Local)
+    // 2. Try Ollama (Fallback)
     try {
-        console.log('[AI Client] Attempting Ollama (Local)...')
+        console.log('[AI Client] Attempting Ollama (Fallback)...')
         return await generateOllamaResponse(messages, userContext, db)
     } catch (error) {
         console.error('[AI Client] Ollama failed:', error)
@@ -82,84 +97,8 @@ export async function generateAiResponseWithStrategy(
 }
 
 /**
- * Gemini Implementation
- */
-async function generateGeminiResponse(
-    messages: AiMessage[],
-    userContext: UserContext,
-    db: DbOperations
-): Promise<AiResponse> {
-    if (!geminiClient) throw new Error('Gemini client not initialized')
-
-    // Note: We use the 2.0-flash model as requested and verified
-    const model = geminiClient.getGenerativeModel({
-        model: 'gemini-2.0-flash',
-        tools: [{ functionDeclarations: AI_TOOLS as any }],
-    })
-
-    const contextInfo = buildContextString(userContext)
-
-    // Convert messages
-    const history = messages.slice(0, -1).map(msg => ({
-        role: msg.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: msg.content }]
-    }))
-
-    const chat = model.startChat({
-        history: [
-            { role: 'user', parts: [{ text: 'Initialize' }] },
-            { role: 'model', parts: [{ text: AI_SYSTEM_PROMPT + contextInfo }] },
-            ...history
-        ],
-        generationConfig: { maxOutputTokens: 2048, temperature: 0.7 }
-    })
-
-    const latestMessage = messages[messages.length - 1]
-    let response = await chat.sendMessage(latestMessage.content)
-    const toolCalls: AiResponse['toolCalls'] = []
-
-    // Handle function calls
-    while (response.response.functionCalls()?.length) {
-        const functionCalls = response.response.functionCalls()!
-        const functionResponses = []
-
-        for (const call of functionCalls) {
-            try {
-                const result = await executeAiTool(call.name, call.args as Record<string, any>, userContext, db)
-
-                toolCalls.push({
-                    name: call.name,
-                    args: call.args as Record<string, any>,
-                    result: result.result
-                })
-
-                functionResponses.push({
-                    functionResponse: {
-                        name: call.name,
-                        response: { result: result.result }
-                    }
-                })
-            } catch (error) {
-                functionResponses.push({
-                    functionResponse: {
-                        name: call.name,
-                        response: { error: String(error) }
-                    }
-                })
-            }
-        }
-        response = await chat.sendMessage(functionResponses)
-    }
-
-    return {
-        text: response.response.text(),
-        toolCalls: toolCalls.length > 0 ? toolCalls : undefined
-    }
-}
-
-/**
  * Groq Implementation
- * Using llama3-70b-8192 or similar
+ * Using llama-3.3-70b-versatile with Tool Calling
  */
 async function generateGroqResponse(
     messages: AiMessage[],
@@ -171,32 +110,87 @@ async function generateGroqResponse(
     const contextInfo = buildContextString(userContext)
     const systemMessage = { role: 'system', content: AI_SYSTEM_PROMPT + contextInfo }
 
-    const formattedMessages = [
+    let currentMessages = [
         systemMessage,
         ...messages.map(m => ({ role: m.role, content: m.content }))
     ]
 
-    // Note: Groq SDK structure is similar to OpenAI
-    const completion = await groqClient.chat.completions.create({
-        messages: formattedMessages as any,
-        model: 'llama-3.3-70b-versatile',
+    const model = 'llama-3.3-70b-versatile'
+    const toolCallsResult: AiResponse['toolCalls'] = []
+
+    // First call to get response or tool calls
+    let completion = await groqClient.chat.completions.create({
+        messages: currentMessages as any,
+        model: model,
         temperature: 0.7,
         max_tokens: 2048,
-        // Tools could be added here if Groq supports the same schema, 
-        // but for fallback we might just use text-only or simplified logic initially.
-        // For now, let's keep it simple and focus on text response for fallback.
-        // If we want tool use, we need to map the tools to OpenAI format.
+        tools: GROQ_TOOLS,
+        tool_choice: 'auto'
     })
 
-    const responseText = completion.choices[0]?.message?.content || "I'm sorry, I couldn't generate a response."
+    let responseMessage = completion.choices[0]?.message
 
-    // Basic text response for fallback
-    return { text: responseText }
+    // Handle Tool Calls Loop
+    while (responseMessage?.tool_calls) {
+        const toolCalls = responseMessage.tool_calls
+
+        // Append assistant's too_calls message to history
+        currentMessages.push(responseMessage as any)
+
+        for (const toolCall of toolCalls) {
+            const functionName = toolCall.function.name
+            const functionArgs = JSON.parse(toolCall.function.arguments)
+
+            console.log(`[Groq] Executing tool: ${functionName}`)
+
+            try {
+                const result = await executeAiTool(functionName, functionArgs, userContext, db)
+
+                toolCallsResult.push({
+                    name: functionName,
+                    args: functionArgs,
+                    result: result.result
+                })
+
+                // Append tool result to history
+                currentMessages.push({
+                    role: 'tool',
+                    tool_call_id: toolCall.id,
+                    content: JSON.stringify(result.result)
+                } as any)
+
+            } catch (error) {
+                console.error(`[Groq] Tool execution failed: ${error}`)
+                currentMessages.push({
+                    role: 'tool',
+                    tool_call_id: toolCall.id,
+                    content: JSON.stringify({ error: String(error) })
+                } as any)
+            }
+        }
+
+        // Get next response from model
+        completion = await groqClient.chat.completions.create({
+            messages: currentMessages as any,
+            model: model,
+            temperature: 0.7,
+            max_tokens: 2048,
+            tools: GROQ_TOOLS
+        })
+
+        responseMessage = completion.choices[0]?.message
+    }
+
+    return {
+        text: responseMessage?.content || "I couldn't generate a response.",
+        toolCalls: toolCallsResult.length > 0 ? toolCallsResult : undefined,
+        provider: 'groq'
+    }
 }
 
 /**
  * Ollama Implementation
- * Using llama3 or mistral
+ * Using llama3 or mistral (Text Only fallback for now)
  */
 async function generateOllamaResponse(
     messages: AiMessage[],
@@ -204,7 +198,9 @@ async function generateOllamaResponse(
     db: DbOperations
 ): Promise<AiResponse> {
     const contextInfo = buildContextString(userContext)
-    const systemMessage = { role: 'system', content: AI_SYSTEM_PROMPT + contextInfo }
+    const FALLBACK_NOTICE = "\n\n[SYSTEM NOTICE: You are running in FALLBACK MODE (Ollama). You DO NOT have access to tools. Do NOT claim to create tasks, habits, or analyze data. Instead, suggest what the user should do.]"
+
+    const systemMessage = { role: 'system', content: AI_SYSTEM_PROMPT + contextInfo + FALLBACK_NOTICE }
 
     const formattedMessages = [
         systemMessage,
@@ -220,7 +216,10 @@ async function generateOllamaResponse(
         stream: false
     })
 
-    return { text: response.message.content }
+    return {
+        text: response.message.content,
+        provider: 'ollama'
+    }
 }
 
 // Helper

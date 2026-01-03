@@ -36,7 +36,7 @@ export interface AiResponseWithTools {
 export function getGeminiModel() {
     const ai = getGenAI()
     if (!ai) return null
-    return ai.getGenerativeModel({ model: 'gemini-2.0-flash' })
+    return ai.getGenerativeModel({ model: 'gemini-1.5-flash' })
 }
 
 /**
@@ -47,7 +47,7 @@ export function getGeminiModelWithTools() {
     if (!ai) return null
 
     return ai.getGenerativeModel({
-        model: 'gemini-2.0-flash',
+        model: 'gemini-1.5-flash',
         tools: [{ functionDeclarations: AI_TOOLS as any }],
     })
 }

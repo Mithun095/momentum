@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 
-type Theme = 'light' | 'dark' | 'midnight'
+type Theme = 'light' | 'dark' | 'midnight' | 'sunrise'
 
 interface ThemeProviderContextType {
     theme: Theme
@@ -19,7 +19,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         setMounted(true)
         const savedTheme = localStorage.getItem('momentum-theme') as Theme | null
-        if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark' || savedTheme === 'midnight')) {
+        if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark' || savedTheme === 'midnight' || savedTheme === 'sunrise')) {
             setTheme(savedTheme)
         } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
             setTheme('dark')
@@ -33,10 +33,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         const root = document.documentElement
 
         // Remove all theme classes
-        root.classList.remove('light', 'dark', 'midnight')
+        root.classList.remove('light', 'dark', 'midnight', 'sunrise')
 
-        // Add base dark class for non-light themes
-        if (theme !== 'light') {
+        // Add base dark class for non-light/sunrise themes
+        if (theme !== 'light' && theme !== 'sunrise') {
             root.classList.add('dark')
         }
 
@@ -66,7 +66,7 @@ export function useTheme() {
     return context
 }
 
-// Theme definitions - simplified to 3 themes
+// Theme definitions
 export const themes = {
     light: {
         name: 'Light',
@@ -85,5 +85,11 @@ export const themes = {
         icon: 'stars',
         primary: '#a78bfa',
         background: '#0a0a1a',
+    },
+    sunrise: {
+        name: 'Sunrise',
+        icon: 'sunrise',
+        primary: '#eab308',
+        background: '#fffbeb',
     },
 }
