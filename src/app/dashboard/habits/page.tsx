@@ -5,9 +5,10 @@ import { useRouter } from 'next/navigation'
 import { api } from '@/lib/trpc/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Plus, Search } from 'lucide-react'
+import { Plus, Search, Sparkles } from 'lucide-react'
 import { HabitList } from '@/components/habits/HabitList'
 import { CreateHabitModal } from '@/components/habits/CreateHabitModal'
+import { HabitTemplatesModal } from '@/components/habits/HabitTemplatesModal'
 import { HABIT_CATEGORIES } from '@/lib/constants/habitCategories'
 import {
     Select,
@@ -22,6 +23,7 @@ export default function HabitsPage() {
     const [searchQuery, setSearchQuery] = useState('')
     const [selectedCategory, setSelectedCategory] = useState<string>('all')
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+    const [isTemplatesModalOpen, setIsTemplatesModalOpen] = useState(false)
 
     const { data: habits, isLoading } = api.habit.getAll.useQuery()
 
@@ -46,13 +48,22 @@ export default function HabitsPage() {
                                 Habits
                             </h1>
                         </div>
-                        <Button
-                            onClick={() => setIsCreateModalOpen(true)}
-                            className="bg-gray-800 hover:bg-gray-700 dark:bg-gray-200 dark:hover:bg-gray-300 dark:text-gray-900"
-                        >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Create Habit
-                        </Button>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                onClick={() => setIsTemplatesModalOpen(true)}
+                            >
+                                <Sparkles className="h-4 w-4 mr-2" />
+                                From Templates
+                            </Button>
+                            <Button
+                                onClick={() => setIsCreateModalOpen(true)}
+                                className="bg-gray-800 hover:bg-gray-700 dark:bg-gray-200 dark:hover:bg-gray-300 dark:text-gray-900"
+                            >
+                                <Plus className="h-4 w-4 mr-2" />
+                                Create Habit
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </nav>
@@ -104,6 +115,12 @@ export default function HabitsPage() {
                 <CreateHabitModal
                     open={isCreateModalOpen}
                     onOpenChange={setIsCreateModalOpen}
+                />
+
+                {/* Templates Modal */}
+                <HabitTemplatesModal
+                    open={isTemplatesModalOpen}
+                    onOpenChange={setIsTemplatesModalOpen}
                 />
             </div>
         </div>

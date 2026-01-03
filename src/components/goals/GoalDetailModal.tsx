@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -13,7 +12,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog'
-import { Check, Plus, Trash2, Circle, CheckCircle2 } from 'lucide-react'
+import { Check, Plus, Trash2, Circle, CheckCircle2, Loader2 } from 'lucide-react'
 import { api } from '@/lib/trpc/client'
 import { useToast } from '@/hooks/use-toast'
 import { format } from 'date-fns'
@@ -49,16 +48,25 @@ const statusColors: Record<string, string> = {
     archived: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
 }
 
-export function GoalDetailModal({ goal, open, onOpenChange }: GoalDetailModalProps) {
+export function GoalDetailModal({ goal: initialGoal, open, onOpenChange }: GoalDetailModalProps) {
     const { toast } = useToast()
     const utils = api.useUtils()
     const [newMilestone, setNewMilestone] = useState('')
 
+    // Fetch fresh goal data when modal is open
+    const { data: freshGoal } = api.goal.getById.useQuery(
+        { id: initialGoal.id },
+        { enabled: open }
+    )
+
+    // Use fresh data if available, otherwise fall back to initial prop
+    const goal = freshGoal ?? initialGoal
+
     const toggleMilestone = api.goal.toggleMilestone.useMutation({
         onSuccess: () => {
+            void utils.goal.getById.invalidate({ id: goal.id })
             void utils.goal.getAll.invalidate()
             void utils.goal.getActive.invalidate()
-            void utils.goal.getById.invalidate()
             void utils.goal.getStats.invalidate()
         },
         onError: (error) => {
@@ -73,9 +81,10 @@ export function GoalDetailModal({ goal, open, onOpenChange }: GoalDetailModalPro
     const addMilestone = api.goal.addMilestone.useMutation({
         onSuccess: () => {
             setNewMilestone('')
+            toast({ title: 'Milestone added!' })
+            void utils.goal.getById.invalidate({ id: goal.id })
             void utils.goal.getAll.invalidate()
             void utils.goal.getActive.invalidate()
-            void utils.goal.getById.invalidate()
         },
         onError: (error) => {
             toast({
@@ -88,9 +97,9 @@ export function GoalDetailModal({ goal, open, onOpenChange }: GoalDetailModalPro
 
     const deleteMilestone = api.goal.deleteMilestone.useMutation({
         onSuccess: () => {
+            void utils.goal.getById.invalidate({ id: goal.id })
             void utils.goal.getAll.invalidate()
             void utils.goal.getActive.invalidate()
-            void utils.goal.getById.invalidate()
         },
         onError: (error) => {
             toast({
@@ -104,6 +113,7 @@ export function GoalDetailModal({ goal, open, onOpenChange }: GoalDetailModalPro
     const updateGoal = api.goal.update.useMutation({
         onSuccess: () => {
             toast({ title: 'Goal updated!' })
+            void utils.goal.getById.invalidate({ id: goal.id })
             void utils.goal.getAll.invalidate()
             void utils.goal.getActive.invalidate()
             void utils.goal.getStats.invalidate()
@@ -236,8 +246,8 @@ export function GoalDetailModal({ goal, open, onOpenChange }: GoalDetailModalPro
                                         </button>
                                         <span
                                             className={`flex-1 ${milestone.isCompleted
-                                                    ? 'line-through text-gray-500 dark:text-gray-400'
-                                                    : 'text-gray-900 dark:text-white'
+                                                ? 'line-through text-gray-500 dark:text-gray-400'
+                                                : 'text-gray-900 dark:text-white'
                                                 }`}
                                         >
                                             {milestone.title}

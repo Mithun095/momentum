@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -12,7 +11,6 @@ import {
     Database,
     FileJson,
     AlertTriangle,
-    CheckCircle2,
     Loader2,
 } from 'lucide-react'
 import { api } from '@/lib/trpc/client'
@@ -22,17 +20,10 @@ export default function SettingsPage() {
     const { toast } = useToast()
     const utils = api.useUtils()
     const [isImporting, setIsImporting] = useState(false)
+    const [isExporting, setIsExporting] = useState<string | null>(null)
     const [overwriteMode, setOverwriteMode] = useState(false)
 
     const { data: backupInfo } = api.data.getBackupInfo.useQuery()
-
-    // Export mutations
-    const exportAll = api.data.exportAll.useQuery(undefined, { enabled: false })
-    const exportHabits = api.data.exportHabits.useQuery(undefined, { enabled: false })
-    const exportTasks = api.data.exportTasks.useQuery(undefined, { enabled: false })
-    const exportJournals = api.data.exportJournals.useQuery(undefined, { enabled: false })
-    const exportGoals = api.data.exportGoals.useQuery(undefined, { enabled: false })
-    const exportEvents = api.data.exportEvents.useQuery(undefined, { enabled: false })
 
     const importData = api.data.importData.useMutation({
         onSuccess: (result) => {
@@ -66,27 +57,41 @@ export default function SettingsPage() {
     }
 
     const handleExportAll = async () => {
-        const result = await exportAll.refetch()
-        if (result.data) {
-            downloadJson(result.data, 'full-backup')
-            toast({ title: 'Export complete!', description: 'Your full backup has been downloaded.' })
+        setIsExporting('all')
+        try {
+            const data = await utils.data.exportAll.fetch()
+            if (data) {
+                downloadJson(data, 'full-backup')
+                toast({ title: 'Export complete!', description: 'Your full backup has been downloaded.' })
+            }
+        } catch (error) {
+            toast({ title: 'Export failed', description: 'Failed to export data', variant: 'destructive' })
+        } finally {
+            setIsExporting(null)
         }
     }
 
     const handleExportSection = async (
         section: 'habits' | 'tasks' | 'journals' | 'goals' | 'events'
     ) => {
-        const queries = {
-            habits: exportHabits,
-            tasks: exportTasks,
-            journals: exportJournals,
-            goals: exportGoals,
-            events: exportEvents,
-        }
-        const result = await queries[section].refetch()
-        if (result.data) {
-            downloadJson(result.data, section)
-            toast({ title: 'Export complete!', description: `Your ${section} have been downloaded.` })
+        setIsExporting(section)
+        try {
+            const fetchMap = {
+                habits: () => utils.data.exportHabits.fetch(),
+                tasks: () => utils.data.exportTasks.fetch(),
+                journals: () => utils.data.exportJournals.fetch(),
+                goals: () => utils.data.exportGoals.fetch(),
+                events: () => utils.data.exportEvents.fetch(),
+            }
+            const data = await fetchMap[section]()
+            if (data) {
+                downloadJson(data, section)
+                toast({ title: 'Export complete!', description: `Your ${section} have been downloaded.` })
+            }
+        } catch (error) {
+            toast({ title: 'Export failed', description: `Failed to export ${section}`, variant: 'destructive' })
+        } finally {
+            setIsExporting(null)
         }
     }
 
@@ -127,6 +132,11 @@ export default function SettingsPage() {
             <div className="max-w-4xl mx-auto">
                 {/* Header */}
                 <div className="mb-8">
+                    <div className="flex items-center gap-4 mb-2">
+                        <a href="/dashboard" className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                            ← Dashboard
+                        </a>
+                    </div>
                     <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
                         Settings
                     </h1>
@@ -182,8 +192,16 @@ export default function SettingsPage() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <Button onClick={handleExportAll} className="w-full">
-                            <FileJson className="h-4 w-4 mr-2" />
+                        <Button
+                            onClick={handleExportAll}
+                            className="w-full"
+                            disabled={isExporting !== null}
+                        >
+                            {isExporting === 'all' ? (
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            ) : (
+                                <FileJson className="h-4 w-4 mr-2" />
+                            )}
                             Export Full Backup
                         </Button>
 
@@ -194,8 +212,13 @@ export default function SettingsPage() {
                                     variant="outline"
                                     size="sm"
                                     onClick={() => handleExportSection(section)}
+                                    disabled={isExporting !== null}
                                 >
-                                    {section}
+                                    {isExporting === section ? (
+                                        <Loader2 className="h-3 w-3 animate-spin" />
+                                    ) : (
+                                        section
+                                    )}
                                 </Button>
                             ))}
                         </div>
