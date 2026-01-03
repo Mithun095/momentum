@@ -62,6 +62,18 @@ export default function DashboardPage() {
                                     📊 Analytics
                                 </Link>
                                 <Link
+                                    href="/dashboard/goals"
+                                    className="text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors"
+                                >
+                                    🎯 Goals
+                                </Link>
+                                <Link
+                                    href="/dashboard/events"
+                                    className="text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors"
+                                >
+                                    📅 Events
+                                </Link>
+                                <Link
                                     href="/dashboard/workspace"
                                     className="text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors"
                                 >
@@ -71,7 +83,13 @@ export default function DashboardPage() {
                                     href="/dashboard/ai"
                                     className="text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors"
                                 >
-                                    🤖 AI Assistant
+                                    🤖 AI
+                                </Link>
+                                <Link
+                                    href="/dashboard/settings"
+                                    className="text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors"
+                                >
+                                    ⚙️ Settings
                                 </Link>
                             </div>
                         </div>

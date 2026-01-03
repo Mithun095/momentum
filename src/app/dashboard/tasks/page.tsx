@@ -154,8 +154,19 @@ export default function TasksPage() {
         return true
     })
 
-    const handleCreate = async (data: Parameters<typeof createTask.mutateAsync>[0]) => {
-        await createTask.mutateAsync(data)
+    const handleCreate = async (data: {
+        title: string
+        description?: string
+        dueDate?: Date
+        priority: 'low' | 'medium' | 'high'
+        category?: string
+        isRecurring?: boolean
+        recurringPattern?: string | null
+    }) => {
+        await createTask.mutateAsync({
+            ...data,
+            recurringPattern: data.recurringPattern ?? undefined,
+        })
     }
 
     const handleUpdate = async (id: string, updates: {

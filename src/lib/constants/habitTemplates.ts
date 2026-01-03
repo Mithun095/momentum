@@ -1,0 +1,361 @@
+export interface HabitTemplate {
+    id: string
+    name: string
+    description: string
+    category: string
+    frequency: 'daily' | 'weekly' | 'custom'
+    icon: string
+    color: string
+}
+
+export const habitCategories = [
+    { id: 'health', name: 'Health & Fitness', icon: '💪', color: '#10B981' },
+    { id: 'productivity', name: 'Productivity', icon: '🎯', color: '#3B82F6' },
+    { id: 'mindfulness', name: 'Mindfulness', icon: '🧘', color: '#8B5CF6' },
+    { id: 'social', name: 'Social & Relationships', icon: '👥', color: '#F59E0B' },
+    { id: 'finance', name: 'Finance', icon: '💰', color: '#6366F1' },
+    { id: 'learning', name: 'Learning', icon: '📚', color: '#EC4899' },
+    { id: 'creativity', name: 'Creativity', icon: '🎨', color: '#14B8A6' },
+    { id: 'self-care', name: 'Self-Care', icon: '🌸', color: '#F472B6' },
+]
+
+export const habitTemplates: HabitTemplate[] = [
+    // Health & Fitness
+    {
+        id: 'exercise-30min',
+        name: 'Exercise 30 Minutes',
+        description: 'Get at least 30 minutes of physical activity',
+        category: 'health',
+        frequency: 'daily',
+        icon: '🏃',
+        color: '#10B981',
+    },
+    {
+        id: 'drink-water',
+        name: 'Drink 8 Glasses of Water',
+        description: 'Stay hydrated throughout the day',
+        category: 'health',
+        frequency: 'daily',
+        icon: '💧',
+        color: '#06B6D4',
+    },
+    {
+        id: 'sleep-8hrs',
+        name: 'Sleep 8 Hours',
+        description: 'Get a full night of quality sleep',
+        category: 'health',
+        frequency: 'daily',
+        icon: '😴',
+        color: '#6366F1',
+    },
+    {
+        id: 'no-alcohol',
+        name: 'No Alcohol',
+        description: 'Stay alcohol-free today',
+        category: 'health',
+        frequency: 'daily',
+        icon: '🚫',
+        color: '#EF4444',
+    },
+    {
+        id: 'stretch',
+        name: 'Morning Stretches',
+        description: '10 minutes of stretching to start the day',
+        category: 'health',
+        frequency: 'daily',
+        icon: '🧘‍♂️',
+        color: '#14B8A6',
+    },
+    {
+        id: 'walk-10k',
+        name: 'Walk 10,000 Steps',
+        description: 'Hit your daily step goal',
+        category: 'health',
+        frequency: 'daily',
+        icon: '👟',
+        color: '#22C55E',
+    },
+
+    // Productivity
+    {
+        id: 'deep-work',
+        name: 'Deep Work Session',
+        description: '2+ hours of focused, uninterrupted work',
+        category: 'productivity',
+        frequency: 'daily',
+        icon: '🧠',
+        color: '#3B82F6',
+    },
+    {
+        id: 'inbox-zero',
+        name: 'Inbox Zero',
+        description: 'Clear your email inbox before end of day',
+        category: 'productivity',
+        frequency: 'daily',
+        icon: '📧',
+        color: '#8B5CF6',
+    },
+    {
+        id: 'review-goals',
+        name: 'Review Goals',
+        description: 'Review and track progress on your goals',
+        category: 'productivity',
+        frequency: 'weekly',
+        icon: '🎯',
+        color: '#F59E0B',
+    },
+    {
+        id: 'plan-tomorrow',
+        name: 'Plan Tomorrow',
+        description: 'Plan your tasks for the next day',
+        category: 'productivity',
+        frequency: 'daily',
+        icon: '📋',
+        color: '#06B6D4',
+    },
+    {
+        id: 'no-social-media',
+        name: 'No Social Media',
+        description: 'Stay off social media for the day',
+        category: 'productivity',
+        frequency: 'daily',
+        icon: '📵',
+        color: '#EF4444',
+    },
+
+    // Mindfulness
+    {
+        id: 'meditate',
+        name: 'Meditate',
+        description: '10+ minutes of meditation practice',
+        category: 'mindfulness',
+        frequency: 'daily',
+        icon: '🧘',
+        color: '#8B5CF6',
+    },
+    {
+        id: 'gratitude-journal',
+        name: 'Gratitude Journal',
+        description: 'Write 3 things you are grateful for',
+        category: 'mindfulness',
+        frequency: 'daily',
+        icon: '🙏',
+        color: '#F472B6',
+    },
+    {
+        id: 'morning-routine',
+        name: 'Morning Routine',
+        description: 'Complete your morning ritual',
+        category: 'mindfulness',
+        frequency: 'daily',
+        icon: '🌅',
+        color: '#FB923C',
+    },
+    {
+        id: 'digital-detox',
+        name: 'Digital Detox Hour',
+        description: '1 hour screen-free time',
+        category: 'mindfulness',
+        frequency: 'daily',
+        icon: '📱',
+        color: '#10B981',
+    },
+    {
+        id: 'breathwork',
+        name: 'Breathing Exercises',
+        description: '5 minutes of focused breathing',
+        category: 'mindfulness',
+        frequency: 'daily',
+        icon: '🌬️',
+        color: '#06B6D4',
+    },
+
+    // Social
+    {
+        id: 'call-family',
+        name: 'Call Family',
+        description: 'Check in with a family member',
+        category: 'social',
+        frequency: 'weekly',
+        icon: '📞',
+        color: '#F59E0B',
+    },
+    {
+        id: 'connect-friend',
+        name: 'Connect with a Friend',
+        description: 'Reach out to a friend',
+        category: 'social',
+        frequency: 'weekly',
+        icon: '👋',
+        color: '#EC4899',
+    },
+    {
+        id: 'compliment',
+        name: 'Give a Compliment',
+        description: 'Brighten someone\'s day with a genuine compliment',
+        category: 'social',
+        frequency: 'daily',
+        icon: '💬',
+        color: '#22C55E',
+    },
+    {
+        id: 'help-someone',
+        name: 'Help Someone',
+        description: 'Do something helpful for another person',
+        category: 'social',
+        frequency: 'daily',
+        icon: '🤝',
+        color: '#3B82F6',
+    },
+
+    // Finance
+    {
+        id: 'track-expenses',
+        name: 'Track Expenses',
+        description: 'Log all spending for the day',
+        category: 'finance',
+        frequency: 'daily',
+        icon: '📊',
+        color: '#6366F1',
+    },
+    {
+        id: 'no-impulse-buying',
+        name: 'No Impulse Buying',
+        description: 'Avoid unplanned purchases',
+        category: 'finance',
+        frequency: 'daily',
+        icon: '🛒',
+        color: '#EF4444',
+    },
+    {
+        id: 'save-money',
+        name: 'Save Money',
+        description: 'Put aside savings today',
+        category: 'finance',
+        frequency: 'daily',
+        icon: '💰',
+        color: '#22C55E',
+    },
+    {
+        id: 'budget-review',
+        name: 'Weekly Budget Review',
+        description: 'Review weekly spending against budget',
+        category: 'finance',
+        frequency: 'weekly',
+        icon: '📈',
+        color: '#8B5CF6',
+    },
+
+    // Learning
+    {
+        id: 'read-30min',
+        name: 'Read 30 Minutes',
+        description: 'Spend 30 minutes reading a book',
+        category: 'learning',
+        frequency: 'daily',
+        icon: '📖',
+        color: '#EC4899',
+    },
+    {
+        id: 'learn-something',
+        name: 'Learn Something New',
+        description: 'Learn a new fact, skill, or concept',
+        category: 'learning',
+        frequency: 'daily',
+        icon: '💡',
+        color: '#F59E0B',
+    },
+    {
+        id: 'practice-skill',
+        name: 'Practice a Skill',
+        description: 'Dedicate time to skill improvement',
+        category: 'learning',
+        frequency: 'daily',
+        icon: '🎸',
+        color: '#14B8A6',
+    },
+    {
+        id: 'online-course',
+        name: 'Online Course Lesson',
+        description: 'Complete a lesson from an online course',
+        category: 'learning',
+        frequency: 'daily',
+        icon: '🎓',
+        color: '#3B82F6',
+    },
+
+    // Creativity
+    {
+        id: 'creative-time',
+        name: 'Creative Time',
+        description: '30 minutes of creative activity',
+        category: 'creativity',
+        frequency: 'daily',
+        icon: '🎨',
+        color: '#14B8A6',
+    },
+    {
+        id: 'write',
+        name: 'Write Something',
+        description: 'Write for at least 15 minutes',
+        category: 'creativity',
+        frequency: 'daily',
+        icon: '✍️',
+        color: '#8B5CF6',
+    },
+    {
+        id: 'take-photo',
+        name: 'Take a Photo',
+        description: 'Capture something beautiful or interesting',
+        category: 'creativity',
+        frequency: 'daily',
+        icon: '📷',
+        color: '#06B6D4',
+    },
+
+    // Self-Care
+    {
+        id: 'skincare',
+        name: 'Skincare Routine',
+        description: 'Complete your skincare routine',
+        category: 'self-care',
+        frequency: 'daily',
+        icon: '✨',
+        color: '#F472B6',
+    },
+    {
+        id: 'healthy-meal',
+        name: 'Eat a Healthy Meal',
+        description: 'Have at least one nutritious, balanced meal',
+        category: 'self-care',
+        frequency: 'daily',
+        icon: '🥗',
+        color: '#22C55E',
+    },
+    {
+        id: 'no-junk-food',
+        name: 'No Junk Food',
+        description: 'Avoid processed and junk food',
+        category: 'self-care',
+        frequency: 'daily',
+        icon: '🍎',
+        color: '#EF4444',
+    },
+    {
+        id: 'vitamins',
+        name: 'Take Vitamins',
+        description: 'Take your daily vitamins and supplements',
+        category: 'self-care',
+        frequency: 'daily',
+        icon: '💊',
+        color: '#F59E0B',
+    },
+]
+
+export function getTemplatesByCategory(category: string): HabitTemplate[] {
+    return habitTemplates.filter(t => t.category === category)
+}
+
+export function getTemplateById(id: string): HabitTemplate | undefined {
+    return habitTemplates.find(t => t.id === id)
+}
