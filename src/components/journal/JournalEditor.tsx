@@ -3,7 +3,9 @@
 import { useState, useCallback, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Save, Loader2, Mic, MicOff } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useVoiceToText } from '@/hooks/useVoiceToText'
 
 interface JournalEditorProps {
     initialContent?: string
@@ -22,7 +24,27 @@ export function JournalEditor({
     const [isSaving, setIsSaving] = useState(false)
     const [lastSaved, setLastSaved] = useState<Date | null>(null)
 
+    const {
+        isListening,
+        transcript,
+        interimTranscript,
+        isSupported,
+        startListening,
+        stopListening,
+        resetTranscript,
+        error
+    } = useVoiceToText()
 
+    // Append transcribed text to content
+    useEffect(() => {
+        if (transcript) {
+            setContent((prev) => {
+                const separator = prev && !prev.endsWith(' ') ? ' ' : ''
+                return prev + separator + transcript.trim()
+            })
+            resetTranscript()
+        }
+    }, [transcript, resetTranscript])
 
     // Update content when initialContent changes (e.g., loading existing entry)
     useEffect(() => {
@@ -41,7 +63,13 @@ export function JournalEditor({
         }
     }, [content, onSave])
 
-
+    const toggleVoiceRecording = () => {
+        if (isListening) {
+            stopListening()
+        } else {
+            startListening()
+        }
+    }
 
     const charCount = content.length
     const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0
@@ -54,7 +82,25 @@ export function JournalEditor({
                         Today's Entry
                     </CardTitle>
                     <div className="flex items-center gap-2">
-
+                        {/* Voice-to-text button */}
+                        {isSupported && (
+                            <Button
+                                onClick={toggleVoiceRecording}
+                                size="sm"
+                                variant={isListening ? "destructive" : "outline"}
+                                className={cn(
+                                    "transition-all",
+                                    isListening && "animate-pulse bg-red-500 hover:bg-red-600"
+                                )}
+                                title={isListening ? "Stop recording" : "Start voice input"}
+                            >
+                                {isListening ? (
+                                    <MicOff className="h-4 w-4" />
+                                ) : (
+                                    <Mic className="h-4 w-4" />
+                                )}
+                            </Button>
+                        )}
                         {lastSaved && (
                             <span className="text-xs text-gray-500 dark:text-gray-400">
                                 Saved {lastSaved.toLocaleTimeString()}
@@ -75,7 +121,27 @@ export function JournalEditor({
                         </Button>
                     </div>
                 </div>
-
+                {/* Voice recording indicator */}
+                {isListening && (
+                    <div className="mt-2 flex items-center gap-2 text-sm text-red-500">
+                        <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                        </span>
+                        Listening... Speak now
+                    </div>
+                )}
+                {error && (
+                    <div className="mt-2 text-sm text-amber-600 dark:text-amber-400">
+                        {error === 'network' ? (
+                            <span>Voice input requires HTTPS in production. Try typing instead.</span>
+                        ) : error === 'not-allowed' ? (
+                            <span>Microphone access denied. Please enable it in browser settings.</span>
+                        ) : (
+                            <span>Voice error: {error}</span>
+                        )}
+                    </div>
+                )}
             </CardHeader>
             <CardContent>
                 <div className="relative">
@@ -85,7 +151,11 @@ export function JournalEditor({
                         placeholder={placeholder}
                         className="w-full min-h-[300px] p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-500 resize-y"
                     />
-
+                    {interimTranscript && (
+                        <div className="absolute bottom-3 right-3 text-xs text-gray-400 italic">
+                            {interimTranscript}
+                        </div>
+                    )}
                 </div>
                 <div className="flex justify-between mt-2 text-xs text-gray-500 dark:text-gray-400">
                     <span>{wordCount} words</span>

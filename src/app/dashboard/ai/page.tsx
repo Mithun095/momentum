@@ -523,9 +523,7 @@ export default function AiAssistantPage() {
                                 <div className="flex gap-2">
                                     <textarea
                                         value={inputMessage}
-                                        onChange={(e) => {
-                                            setInputMessage(e.target.value)
-                                        }}
+                                        onChange={(e) => setInputMessage(e.target.value)}
                                         onKeyDown={handleKeyDown}
                                         placeholder="Ask me to create a task, suggest habits, or show your progress..."
                                         rows={1}
@@ -541,7 +539,7 @@ export default function AiAssistantPage() {
                                     </Button>
                                 </div>
                                 <p className="text-xs text-gray-400 mt-2 text-center">
-                                    🎤 Use voice input or press Enter to send
+                                    Press Enter to send
                                 </p>
                             </div>
                         </>
