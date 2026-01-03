@@ -1,12 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useSession, signOut } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import {
     Flame,
-    User,
     LogOut,
     Settings,
     BarChart3,
@@ -14,16 +13,32 @@ import {
     Users,
     ChevronDown,
     Menu,
-    X
+    X,
+    Palette,
+    Check
 } from 'lucide-react'
 import { api } from '@/lib/trpc/client'
 import { format } from 'date-fns'
+import { useTheme, themes } from '@/components/theme/ThemeProvider'
 
 export function Navbar() {
     const { data: session, status } = useSession()
     const [currentTime, setCurrentTime] = useState(new Date())
     const [isMenuOpen, setIsMenuOpen] = useState(false)
     const [isProfileOpen, setIsProfileOpen] = useState(false)
+    const [isThemeOpen, setIsThemeOpen] = useState(false)
+    const activityRecorded = useRef(false)
+
+    // Theme - with fallback for when ThemeProvider isn't ready
+    let theme: keyof typeof themes = 'light'
+    let setTheme: (t: keyof typeof themes) => void = () => { }
+    try {
+        const themeContext = useTheme()
+        theme = themeContext.theme
+        setTheme = themeContext.setTheme
+    } catch {
+        // ThemeProvider not ready yet
+    }
 
     // Update time every minute
     useEffect(() => {
@@ -40,9 +55,10 @@ export function Navbar() {
 
     const recordActivity = api.streak.recordActivity.useMutation()
 
-    // Record activity on mount when authenticated
+    // Record activity on mount when authenticated (only once)
     useEffect(() => {
-        if (status === 'authenticated') {
+        if (status === 'authenticated' && !activityRecorded.current) {
+            activityRecorded.current = true
             recordActivity.mutate()
         }
     }, [status])
@@ -76,7 +92,7 @@ export function Navbar() {
                     </div>
 
                     {/* Right: Streak + Auth */}
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 sm:gap-4">
                         {/* Streak Badge */}
                         {status === 'authenticated' && (
                             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-orange-100 to-red-100 dark:from-orange-900/30 dark:to-red-900/30 rounded-full border border-orange-200 dark:border-orange-800">
@@ -155,6 +171,45 @@ export function Navbar() {
                                             Settings
                                         </Link>
 
+                                        {/* Theme Submenu */}
+                                        <div className="border-t border-gray-100 dark:border-gray-700 mt-2 pt-2">
+                                            <div className="relative">
+                                                <button
+                                                    onClick={() => setIsThemeOpen(!isThemeOpen)}
+                                                    className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 w-full"
+                                                >
+                                                    <Palette className="h-4 w-4" />
+                                                    <span className="flex-1 text-left">Theme</span>
+                                                    <span className="text-lg">{themes[theme].icon}</span>
+                                                </button>
+
+                                                {isThemeOpen && (
+                                                    <div className="absolute right-full top-0 mr-2 w-44 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-2">
+                                                        {(Object.keys(themes) as Array<keyof typeof themes>).map((key) => (
+                                                            <button
+                                                                key={key}
+                                                                onClick={() => {
+                                                                    setTheme(key)
+                                                                    setIsThemeOpen(false)
+                                                                }}
+                                                                className={`
+                                                                    w-full flex items-center gap-3 px-3 py-2 text-sm
+                                                                    ${theme === key
+                                                                        ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400'
+                                                                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                                                    }
+                                                                `}
+                                                            >
+                                                                <span className="text-lg">{themes[key].icon}</span>
+                                                                <span className="flex-1 text-left">{themes[key].name}</span>
+                                                                {theme === key && <Check className="h-4 w-4" />}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
                                         <div className="border-t border-gray-100 dark:border-gray-700 mt-2 pt-2">
                                             <button
                                                 onClick={() => signOut({ callbackUrl: '/' })}
@@ -212,6 +267,30 @@ export function Navbar() {
                                 <Settings className="h-4 w-4" />
                                 Settings
                             </Link>
+
+                            {/* Mobile Theme Selector */}
+                            <div className="px-4 py-2">
+                                <div className="text-xs text-gray-500 mb-2">Theme</div>
+                                <div className="flex flex-wrap gap-2">
+                                    {(Object.keys(themes) as Array<keyof typeof themes>).map((key) => (
+                                        <button
+                                            key={key}
+                                            onClick={() => setTheme(key)}
+                                            className={`
+                                                px-3 py-1.5 rounded-lg text-sm flex items-center gap-1.5
+                                                ${theme === key
+                                                    ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800'
+                                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
+                                                }
+                                            `}
+                                        >
+                                            <span>{themes[key].icon}</span>
+                                            <span>{themes[key].name}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
                             <button
                                 onClick={() => signOut({ callbackUrl: '/' })}
                                 className="flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg w-full"
