@@ -15,11 +15,20 @@ import {
     Menu,
     X,
     Palette,
-    Check
+    Check,
+    Sun,
+    Moon,
+    Stars
 } from 'lucide-react'
 import { api } from '@/lib/trpc/client'
 import { format } from 'date-fns'
 import { useTheme, themes } from '@/components/theme/ThemeProvider'
+
+const themeIcons = {
+    light: Sun,
+    dark: Moon,
+    midnight: Stars,
+}
 
 export function Navbar() {
     const { data: session, status } = useSession()
@@ -39,6 +48,8 @@ export function Navbar() {
     } catch {
         // ThemeProvider not ready yet
     }
+
+    const ThemeIcon = themeIcons[theme] || Sun
 
     // Update time every minute
     useEffect(() => {
@@ -180,31 +191,34 @@ export function Navbar() {
                                                 >
                                                     <Palette className="h-4 w-4" />
                                                     <span className="flex-1 text-left">Theme</span>
-                                                    <span className="text-lg">{themes[theme].icon}</span>
+                                                    <ThemeIcon className="h-4 w-4" />
                                                 </button>
 
                                                 {isThemeOpen && (
                                                     <div className="absolute right-full top-0 mr-2 w-44 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-2">
-                                                        {(Object.keys(themes) as Array<keyof typeof themes>).map((key) => (
-                                                            <button
-                                                                key={key}
-                                                                onClick={() => {
-                                                                    setTheme(key)
-                                                                    setIsThemeOpen(false)
-                                                                }}
-                                                                className={`
-                                                                    w-full flex items-center gap-3 px-3 py-2 text-sm
-                                                                    ${theme === key
-                                                                        ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400'
-                                                                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                                                                    }
-                                                                `}
-                                                            >
-                                                                <span className="text-lg">{themes[key].icon}</span>
-                                                                <span className="flex-1 text-left">{themes[key].name}</span>
-                                                                {theme === key && <Check className="h-4 w-4" />}
-                                                            </button>
-                                                        ))}
+                                                        {(Object.keys(themes) as Array<keyof typeof themes>).map((key) => {
+                                                            const Icon = themeIcons[key]
+                                                            return (
+                                                                <button
+                                                                    key={key}
+                                                                    onClick={() => {
+                                                                        setTheme(key)
+                                                                        setIsThemeOpen(false)
+                                                                    }}
+                                                                    className={`
+                                                                        w-full flex items-center gap-3 px-3 py-2 text-sm
+                                                                        ${theme === key
+                                                                            ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400'
+                                                                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                                                        }
+                                                                    `}
+                                                                >
+                                                                    <Icon className="h-4 w-4" />
+                                                                    <span className="flex-1 text-left">{themes[key].name}</span>
+                                                                    {theme === key && <Check className="h-4 w-4" />}
+                                                                </button>
+                                                            )
+                                                        })}
                                                     </div>
                                                 )}
                                             </div>
@@ -271,23 +285,26 @@ export function Navbar() {
                             {/* Mobile Theme Selector */}
                             <div className="px-4 py-2">
                                 <div className="text-xs text-gray-500 mb-2">Theme</div>
-                                <div className="flex flex-wrap gap-2">
-                                    {(Object.keys(themes) as Array<keyof typeof themes>).map((key) => (
-                                        <button
-                                            key={key}
-                                            onClick={() => setTheme(key)}
-                                            className={`
-                                                px-3 py-1.5 rounded-lg text-sm flex items-center gap-1.5
-                                                ${theme === key
-                                                    ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800'
-                                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
-                                                }
-                                            `}
-                                        >
-                                            <span>{themes[key].icon}</span>
-                                            <span>{themes[key].name}</span>
-                                        </button>
-                                    ))}
+                                <div className="flex gap-2">
+                                    {(Object.keys(themes) as Array<keyof typeof themes>).map((key) => {
+                                        const Icon = themeIcons[key]
+                                        return (
+                                            <button
+                                                key={key}
+                                                onClick={() => setTheme(key)}
+                                                className={`
+                                                    px-3 py-2 rounded-lg text-sm flex items-center gap-2
+                                                    ${theme === key
+                                                        ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800'
+                                                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
+                                                    }
+                                                `}
+                                            >
+                                                <Icon className="h-4 w-4" />
+                                                <span>{themes[key].name}</span>
+                                            </button>
+                                        )
+                                    })}
                                 </div>
                             </div>
 

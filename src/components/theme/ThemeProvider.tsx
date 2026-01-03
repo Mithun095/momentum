@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 
-type Theme = 'light' | 'dark' | 'crazy' | 'ocean' | 'sunset' | 'forest'
+type Theme = 'light' | 'dark' | 'midnight'
 
 interface ThemeProviderContextType {
     theme: Theme
@@ -19,7 +19,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         setMounted(true)
         const savedTheme = localStorage.getItem('momentum-theme') as Theme | null
-        if (savedTheme) {
+        if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark' || savedTheme === 'midnight')) {
             setTheme(savedTheme)
         } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
             setTheme('dark')
@@ -33,7 +33,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         const root = document.documentElement
 
         // Remove all theme classes
-        root.classList.remove('light', 'dark', 'crazy', 'ocean', 'sunset', 'forest')
+        root.classList.remove('light', 'dark', 'midnight')
 
         // Add base dark class for non-light themes
         if (theme !== 'light') {
@@ -66,42 +66,24 @@ export function useTheme() {
     return context
 }
 
-// Theme definitions for CSS variables
+// Theme definitions - simplified to 3 themes
 export const themes = {
     light: {
         name: 'Light',
-        icon: '☀️',
+        icon: 'sun',
         primary: '#6366f1',
         background: '#ffffff',
     },
     dark: {
         name: 'Dark',
-        icon: '🌙',
+        icon: 'moon',
         primary: '#818cf8',
         background: '#0f172a',
     },
-    crazy: {
-        name: 'Crazy',
-        icon: '🌈',
-        primary: '#f472b6',
-        background: '#1a0a2e',
-    },
-    ocean: {
-        name: 'Ocean',
-        icon: '🌊',
-        primary: '#22d3d1',
-        background: '#042f2e',
-    },
-    sunset: {
-        name: 'Sunset',
-        icon: '🌅',
-        primary: '#fb923c',
-        background: '#1c1917',
-    },
-    forest: {
-        name: 'Forest',
-        icon: '🌲',
-        primary: '#22c55e',
-        background: '#052e16',
+    midnight: {
+        name: 'Midnight',
+        icon: 'stars',
+        primary: '#a78bfa',
+        background: '#0a0a1a',
     },
 }

@@ -1,137 +1,220 @@
+'use client'
+
+import { useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
+import {
+  CheckCircle,
+  Calendar,
+  BarChart3,
+  Sparkles,
+  ArrowRight,
+  Zap,
+  Shield,
+  Clock
+} from 'lucide-react'
 
 export default function HomePage() {
+  const { status } = useSession()
+  const router = useRouter()
+
+  // Auto-redirect if logged in
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.push('/dashboard')
+    }
+  }, [status, router])
+
+  // Show loading while checking auth
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  // Only show landing page to unauthenticated users
+  if (status === 'authenticated') {
+    return null
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      {/* Hero Section */}
-      <div className="container mx-auto px-4 py-20">
-        <div className="max-w-4xl mx-auto text-center">
-          {/* Logo */}
-          <h1 className="text-6xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent animate-gradient">
-            Momentum
-          </h1>
-
-          {/* Tagline */}
-          <p className="text-xl md:text-2xl text-gray-700 dark:text-gray-300 mb-4">
-            Track your life. Amplify your progress.
-          </p>
-
-          <p className="text-lg text-gray-600 dark:text-gray-400 mb-12 max-w-2xl mx-auto">
-            The all-in-one platform to build better habits, journal your thoughts,
-            plan your days, and achieve your goals with AI-powered insights.
-          </p>
-
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-            <Link href="/auth/signup">
-              <Button
-                size="lg"
-                className="w-full sm:w-auto h-14 px-8 text-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-              >
-                Get Started Free
-              </Button>
-            </Link>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      {/* Navigation */}
+      <nav className="border-b border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">M</span>
+            </div>
+            <span className="text-xl font-semibold text-gray-900 dark:text-white">Momentum</span>
+          </div>
+          <div className="flex items-center gap-4">
             <Link href="/auth/signin">
-              <Button
-                size="lg"
-                variant="outline"
-                className="w-full sm:w-auto h-14 px-8 text-lg"
-              >
-                Sign In
-              </Button>
+              <Button variant="ghost" size="sm">Sign In</Button>
             </Link>
-          </div>
-
-          {/* Features Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mt-20">
-            {/* Feature 1: Habit Tracking */}
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
-              <div className="text-4xl mb-4">✅</div>
-              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">
-                Habit Tracking
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                Build better habits with visual calendar tracking and streak analytics
-              </p>
-            </div>
-
-            {/* Feature 2: Smart Journal */}
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
-              <div className="text-4xl mb-4">📔</div>
-              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">
-                Smart Journal
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                Write or speak your thoughts with voice-to-text and structured sections
-              </p>
-            </div>
-
-            {/* Feature 3: Task Planning */}
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
-              <div className="text-4xl mb-4">📋</div>
-              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">
-                Task Planning
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                Plan your tomorrow today with auto-converting planners to tasks
-              </p>
-            </div>
-
-            {/* Feature 4: AI Assistant */}
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
-              <div className="text-4xl mb-4">🤖</div>
-              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">
-                AI Assistant
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                Get personalized insights and manage your data with natural language
-              </p>
-            </div>
-
-            {/* Feature 5: Team Collaboration */}
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
-              <div className="text-4xl mb-4">👥</div>
-              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">
-                Team Workspaces
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                Track team habits and productivity for HR and company wellness
-              </p>
-            </div>
-
-            {/* Feature 6: Analytics */}
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
-              <div className="text-4xl mb-4">📊</div>
-              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">
-                Advanced Analytics
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                Visualize your progress with charts, heatmaps, and insights
-              </p>
-            </div>
-          </div>
-
-          {/* Footer CTA */}
-          <div className="mt-20 p-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl text-white">
-            <h2 className="text-3xl font-bold mb-4">
-              Start Building Momentum Today
-            </h2>
-            <p className="text-lg mb-6 opacity-90">
-              Join thousands of people improving their lives, one day at a time.
-            </p>
             <Link href="/auth/signup">
-              <Button
-                size="lg"
-                variant="secondary"
-                className="h-14 px-8 text-lg"
-              >
-                Get Started - It's Free
+              <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700">
+                Get Started
               </Button>
             </Link>
           </div>
         </div>
+      </nav>
+
+      {/* Hero Section */}
+      <section className="py-24 px-6">
+        <div className="max-w-4xl mx-auto text-center">
+          <h1 className="text-5xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">
+            Build better habits.
+            <br />
+            <span className="text-indigo-600">Achieve your goals.</span>
+          </h1>
+          <p className="text-xl text-gray-600 dark:text-gray-400 mb-10 max-w-2xl mx-auto leading-relaxed">
+            A simple, focused platform to track habits, plan your days,
+            journal your thoughts, and stay on track with your goals.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/auth/signup">
+              <Button size="lg" className="h-12 px-8 text-base bg-indigo-600 hover:bg-indigo-700">
+                Start Free
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+            <Link href="/auth/signin">
+              <Button size="lg" variant="outline" className="h-12 px-8 text-base">
+                Sign In
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Features */}
+      <section className="py-20 px-6 bg-white dark:bg-gray-900">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-4">
+            Everything you need to stay productive
+          </h2>
+          <p className="text-center text-gray-600 dark:text-gray-400 mb-16 max-w-2xl mx-auto">
+            Simple tools designed to help you focus on what matters most.
+          </p>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <FeatureCard
+              icon={CheckCircle}
+              title="Habit Tracking"
+              description="Build consistent routines with visual progress tracking and streak analytics."
+            />
+            <FeatureCard
+              icon={Calendar}
+              title="Task Planning"
+              description="Plan your days and weeks with an intuitive calendar and task management."
+            />
+            <FeatureCard
+              icon={BarChart3}
+              title="Progress Analytics"
+              description="Visualize your growth with comprehensive charts and insights."
+            />
+            <FeatureCard
+              icon={Sparkles}
+              title="AI Assistant"
+              description="Get personalized suggestions and manage your data with natural language."
+            />
+            <FeatureCard
+              icon={Clock}
+              title="Daily Journal"
+              description="Reflect on your day with structured journaling and voice notes."
+            />
+            <FeatureCard
+              icon={Zap}
+              title="Goal Setting"
+              description="Set meaningful goals with milestones and track your progress."
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Trust Section */}
+      <section className="py-20 px-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8 text-center">
+            <div>
+              <div className="w-12 h-12 mx-auto mb-4 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl flex items-center justify-center">
+                <Shield className="h-6 w-6 text-indigo-600" />
+              </div>
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Secure & Private</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Your data is encrypted and never shared with third parties.</p>
+            </div>
+            <div>
+              <div className="w-12 h-12 mx-auto mb-4 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl flex items-center justify-center">
+                <Zap className="h-6 w-6 text-indigo-600" />
+              </div>
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Fast & Reliable</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Built for speed with instant sync across all devices.</p>
+            </div>
+            <div>
+              <div className="w-12 h-12 mx-auto mb-4 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl flex items-center justify-center">
+                <Clock className="h-6 w-6 text-indigo-600" />
+              </div>
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Free Forever</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Core features are free. No credit card required.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 px-6 bg-indigo-600">
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 className="text-3xl font-bold text-white mb-4">
+            Ready to build momentum?
+          </h2>
+          <p className="text-indigo-100 mb-8 text-lg">
+            Join and start building better habits today.
+          </p>
+          <Link href="/auth/signup">
+            <Button size="lg" variant="secondary" className="h-12 px-8 text-base">
+              Get Started Free
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="py-8 px-6 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 bg-gradient-to-br from-indigo-500 to-purple-600 rounded flex items-center justify-center">
+              <span className="text-white font-bold text-xs">M</span>
+            </div>
+            <span className="text-sm text-gray-600 dark:text-gray-400">Momentum</span>
+          </div>
+          <p className="text-sm text-gray-500">
+            Build better habits. Achieve your goals.
+          </p>
+        </div>
+      </footer>
+    </div>
+  )
+}
+
+function FeatureCard({ icon: Icon, title, description }: {
+  icon: React.ComponentType<{ className?: string }>,
+  title: string,
+  description: string
+}) {
+  return (
+    <div className="p-6 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
+      <div className="w-10 h-10 mb-4 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center">
+        <Icon className="h-5 w-5 text-indigo-600" />
       </div>
+      <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{title}</h3>
+      <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{description}</p>
     </div>
   )
 }
