@@ -2,7 +2,7 @@
 
 > Comprehensive life management platform with habit tracking, journaling, task planning, and AI assistance.
 
-**Last Updated**: January 3, 2026
+**Last Updated**: January 4, 2026
 
 ---
 
@@ -213,6 +213,9 @@
 - [x] Mobile optimization (hamburger menu, responsive layouts)
 - [x] Accessibility features (ARIA labels, focus indicators, keyboard navigation)
 - [x] Muted color scheme (user preference)
+- [x] **Legal Pages** (Terms & Privacy, linked in Signup)
+- [x] **Monochrome Branding** (Updated Navbar to match new logo)
+- [x] **Premium Confirmations** (Custom `AlertDialog` for deletions)
 
 **UI Components Created**:
 - Button, Card, Input, Label (base components)
@@ -220,6 +223,8 @@
 - Progress, Skeleton (Phase 3)
 - `ThemeToggle.tsx` - Light/Dark/Crazy mode toggle with localStorage persistence
 - `MobileNav.tsx` - Slide-in drawer navigation for mobile screens
+- `AlertDialog.tsx` - Custom confirmation modal
+- `Navbar.tsx` - Polished monochrome navigation bar
 
 **CSS Animations Added**:
 - Gradient shift background animation
@@ -270,7 +275,7 @@
 - [x] End-to-end tests (Playwright framework)
 - [x] Security audit (Basic encryption implemented)
 - [x] Performance optimization (DB Indexes, Parallel Queries)
-- [x] Bug fixes (Journal persistence, Voice engine stability)
+- [x] Bug fixes (Journal persistence, Voice engine stability, Mobile Nav, Dark Mode)
 
 **Testing Infrastructure**:
 - Vitest with @testing-library/react for unit tests
@@ -350,6 +355,16 @@
 - **Fix**: Created aggregated `dashboardRouter` (Promise.all) + Added `@@index([userId])` to Prisma schema.
 - **Status**: ✅ Optimized
 
+### UI: Dark Mode & Visibility (Jan 04)
+- **Issue**: `CategoryRadarChart` text invisible in dark mode; Productivity Heatmap too sparse.
+- **Fix**: Added theme-aware text colors; expanded heatmap to 6 months; switched to monochrome navbar.
+- **Status**: ✅ Fixed
+
+### UX: Delete Safety (Jan 04)
+- **Issue**: Users could accidentally delete items; native alert looked cheap.
+- **Fix**: Implemented `AlertDialog` with "Are you sure?" confirmation for Habits & Tasks.
+- **Status**: ✅ Fixed
+
 ---
 
 ## File Structure
@@ -403,4 +418,4 @@ src/
 | Jan 01 | Fixes | Bug fixes: AI Env, Habit Stats, Journal infinite loop |
 | Jan 02 | Polish | Checkpoint 7 - AI Assistant (Vosk, Real-time), Dashboard Optimization |
 | Jan 02 | Deep Bug Hunt | Fixed Journal Persistence, Added DB Indexes, Final Polish |
-
+| Jan 04 | UI & Mobile | Heatmap improve, Monochrome Navbar, Mobile Nav Fix, Legal Pages, Dialogs |
