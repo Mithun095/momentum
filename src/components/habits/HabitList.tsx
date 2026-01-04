@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Edit, Check } from 'lucide-react'
+import { Edit, Check, Trash2 } from 'lucide-react'
 import { getCategoryInfo } from '@/lib/constants/habitCategories'
 import { getColorClasses } from '@/lib/constants/habitColors'
 import { EditHabitModal } from './EditHabitModal'
@@ -66,6 +66,28 @@ export const HabitList = React.memo(function HabitList({ habits, isLoading }: Ha
         )
     }, [completions])
 
+    const deleteHabit = api.habit.delete.useMutation({
+        onSuccess: () => {
+            toast({
+                title: 'Habit deleted',
+                description: 'The habit has been permanently deleted.',
+            })
+            void utils.habit.getAll.invalidate()
+            void utils.habit.getStats.invalidate()
+            void utils.habit.getAllCompletions.invalidate()
+            // Invalidate dashboard overview to fix sync issues
+            void utils.dashboard.getOverview.invalidate()
+        },
+        onError: (error) => {
+            toast({
+                title: 'Error',
+                description: error.message || 'Failed to delete habit',
+                variant: 'destructive',
+            })
+        },
+    })
+
+    // Also invalidate dashboard on other mutations to ensure sync
     const markComplete = api.habit.markComplete.useMutation({
         onMutate: async (newHabit) => {
             // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
@@ -130,6 +152,7 @@ export const HabitList = React.memo(function HabitList({ habits, isLoading }: Ha
             void utils.habit.getAllCompletions.invalidate()
             void utils.habit.getStats.invalidate()
             void utils.habit.getAll.invalidate()
+            void utils.dashboard.getOverview.invalidate()
         },
         onSuccess: () => {
             toast({
@@ -196,6 +219,7 @@ export const HabitList = React.memo(function HabitList({ habits, isLoading }: Ha
             void utils.habit.getAllCompletions.invalidate()
             void utils.habit.getStats.invalidate()
             void utils.habit.getAll.invalidate()
+            void utils.dashboard.getOverview.invalidate()
         },
         onSuccess: () => {
             toast({
@@ -286,6 +310,18 @@ export const HabitList = React.memo(function HabitList({ habits, isLoading }: Ha
                                             onClick={() => setEditingHabit(habit)}
                                         >
                                             <Edit className="h-4 w-4" />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                            onClick={() => {
+                                                if (confirm('Are you sure you want to delete this habit?')) {
+                                                    deleteHabit.mutate({ id: habit.id })
+                                                }
+                                            }}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
                                         </Button>
                                     </div>
                                 </div>

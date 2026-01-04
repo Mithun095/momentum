@@ -16,6 +16,7 @@ export const habitCategories = [
     { id: 'finance', name: 'Finance', icon: '💰', color: '#6366F1' },
     { id: 'learning', name: 'Learning', icon: '📚', color: '#EC4899' },
     { id: 'creativity', name: 'Creativity', icon: '🎨', color: '#14B8A6' },
+    { id: 'developer', name: 'Developer', icon: '💻', color: '#6366F1' },
     { id: 'self-care', name: 'Self-Care', icon: '🌸', color: '#F472B6' },
 ]
 
@@ -349,6 +350,52 @@ export const habitTemplates: HabitTemplate[] = [
         frequency: 'daily',
         icon: '💊',
         color: '#F59E0B',
+    },
+    // Developer
+    {
+        id: 'code-1hr',
+        name: 'Code for 1 Hour',
+        description: 'Deep work coding session',
+        category: 'developer',
+        frequency: 'daily',
+        icon: '💻',
+        color: '#6366F1',
+    },
+    {
+        id: 'github-commit',
+        name: 'Commit to GitHub',
+        description: 'Push code and keep the streak alive',
+        category: 'developer',
+        frequency: 'daily',
+        icon: '🐙',
+        color: '#22C55E',
+    },
+    {
+        id: 'leetcode',
+        name: 'Solve LeetCode Problem',
+        description: 'Practice algorithms and data structures',
+        category: 'developer',
+        frequency: 'daily',
+        icon: '🧠',
+        color: '#F59E0B',
+    },
+    {
+        id: 'read-tech-blog',
+        name: 'Read Tech Blog',
+        description: 'Stay updated with latest tech trends',
+        category: 'developer',
+        frequency: 'daily',
+        icon: '📖',
+        color: '#EC4899',
+    },
+    {
+        id: 'review-pr',
+        name: 'Review PRs',
+        description: 'Review team pull requests',
+        category: 'developer',
+        frequency: 'daily',
+        icon: '👀',
+        color: '#8B5CF6',
     },
 ]
 
