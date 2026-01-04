@@ -8,7 +8,12 @@ const nextConfig = {
     },
   },
   images: {
-    domains: ['lh3.googleusercontent.com'], // For Google profile images
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+      },
+    ], 
   },
   async headers() {
     return [
