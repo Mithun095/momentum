@@ -15,6 +15,8 @@ import { HabitDistributionChart } from '@/components/analytics/HabitDistribution
 import { GrowthAreaChart } from '@/components/analytics/GrowthAreaChart'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
+import { ArrowLeft } from 'lucide-react'
 
 export default function AnalyticsPage() {
     const { data: session, status } = useSession()
@@ -77,9 +79,11 @@ export default function AnalyticsPage() {
             <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
-                        <div className="flex items-center gap-4">
-                            <Link href="/dashboard" className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors">
-                                ← Dashboard
+                        <div className="flex items-center gap-2">
+                            <Link href="/dashboard">
+                                <Button variant="ghost" size="icon" className="-ml-2">
+                                    <ArrowLeft className="h-5 w-5" />
+                                </Button>
                             </Link>
                             <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-500 to-purple-600 bg-clip-text text-transparent">
                                 Analytics Center

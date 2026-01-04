@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { api } from '@/lib/trpc/client'
 import { useToast } from '@/hooks/use-toast'
-import { Plus, Users, Target, Building2, Crown, Shield, User, Settings } from 'lucide-react'
+import { Plus, Users, Target, Building2, Crown, Shield, User, Settings, ArrowLeft } from 'lucide-react'
 import { format } from 'date-fns'
 
 // Role badge component
@@ -133,10 +133,13 @@ export default function WorkspacesPage() {
             {/* Top Navigation */}
             <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
                     <div className="flex justify-between items-center h-16">
-                        <div className="flex items-center gap-4">
-                            <a href="/dashboard" className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
-                                ← Dashboard
+                        <div className="flex items-center gap-2">
+                            <a href="/dashboard">
+                                <Button variant="ghost" size="icon" className="-ml-2">
+                                    <ArrowLeft className="h-5 w-5" />
+                                </Button>
                             </a>
                             <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                                 Workspaces
