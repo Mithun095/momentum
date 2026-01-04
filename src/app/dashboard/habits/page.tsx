@@ -17,6 +17,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select'
+import { Progress } from '@/components/ui/progress'
+import { startOfDay, endOfDay } from 'date-fns'
 
 export default function HabitsPage() {
     const router = useRouter()
@@ -26,6 +28,17 @@ export default function HabitsPage() {
     const [isTemplatesModalOpen, setIsTemplatesModalOpen] = useState(false)
 
     const { data: habits, isLoading } = api.habit.getAll.useQuery()
+    // Fetch today's completions for progress bar
+    const today = new Date()
+    const { data: completions } = api.habit.getAllCompletions.useQuery({
+        startDate: startOfDay(today),
+        endDate: endOfDay(today)
+    })
+
+    // Calculate progress
+    const totalHabits = habits?.filter(h => h.isActive).length ?? 0
+    const completedCount = completions?.length ?? 0
+    const progress = totalHabits > 0 ? (completedCount / totalHabits) * 100 : 0
 
     // Filter habits based on search and category
     const filteredHabits = habits?.filter((habit) => {
@@ -74,6 +87,15 @@ export default function HabitsPage() {
                 <p className="text-gray-600 dark:text-gray-400 mb-6">
                     Track and manage your daily habits to build a better you
                 </p>
+
+                {/* Daily Progress */}
+                <div className="mb-8 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+                    <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Daily Progress</span>
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{Math.round(progress)}%</span>
+                    </div>
+                    <Progress value={progress} className="h-2" />
+                </div>
 
                 {/* Filters */}
                 <div className="flex flex-col sm:flex-row gap-4 mb-8">

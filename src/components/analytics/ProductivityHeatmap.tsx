@@ -15,11 +15,11 @@ interface ProductivityHeatmapProps {
 }
 
 const getIntensityClass = (score: number): string => {
-    if (score === 0) return 'bg-gray-100 dark:bg-gray-800'
-    if (score <= 2) return 'bg-emerald-200 dark:bg-emerald-900'
-    if (score <= 5) return 'bg-emerald-300 dark:bg-emerald-700'
-    if (score <= 8) return 'bg-emerald-400 dark:bg-emerald-600'
-    return 'bg-emerald-500 dark:bg-emerald-500'
+    if (score === 0) return 'bg-gray-100 dark:bg-[#161b22]' // Empty: Light gray / Dark GitHub-like gray
+    if (score <= 2) return 'bg-[#9be9a8] dark:bg-[#0e4429]' // Level 1
+    if (score <= 5) return 'bg-[#40c463] dark:bg-[#006d32]' // Level 2
+    if (score <= 8) return 'bg-[#30a14e] dark:bg-[#26a641]' // Level 3
+    return 'bg-[#216e39] dark:bg-[#39d353]' // Level 4
 }
 
 export function ProductivityHeatmap({ data }: ProductivityHeatmapProps) {
@@ -142,11 +142,11 @@ export function ProductivityHeatmap({ data }: ProductivityHeatmapProps) {
             <div className="flex items-center justify-end gap-2 mt-4 text-xs text-gray-500 dark:text-gray-400">
                 <span>Less</span>
                 <div className="flex gap-[2px]">
-                    <div className="w-3 h-3 rounded-sm bg-gray-100 dark:bg-gray-800" />
-                    <div className="w-3 h-3 rounded-sm bg-emerald-200 dark:bg-emerald-900" />
-                    <div className="w-3 h-3 rounded-sm bg-emerald-300 dark:bg-emerald-700" />
-                    <div className="w-3 h-3 rounded-sm bg-emerald-400 dark:bg-emerald-600" />
-                    <div className="w-3 h-3 rounded-sm bg-emerald-500 dark:bg-emerald-500" />
+                    <div className="w-3 h-3 rounded-sm bg-gray-100 dark:bg-[#161b22]" />
+                    <div className="w-3 h-3 rounded-sm bg-[#9be9a8] dark:bg-[#0e4429]" />
+                    <div className="w-3 h-3 rounded-sm bg-[#40c463] dark:bg-[#006d32]" />
+                    <div className="w-3 h-3 rounded-sm bg-[#30a14e] dark:bg-[#26a641]" />
+                    <div className="w-3 h-3 rounded-sm bg-[#216e39] dark:bg-[#39d353]" />
                 </div>
                 <span>More</span>
             </div>

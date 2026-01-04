@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Progress } from '@/components/ui/progress'
 import { Navbar } from '@/components/layout/Navbar'
 import { AIFloatingButton } from '@/components/ai/AIFloatingButton'
 import { EventCalendar } from '@/components/events/EventCalendar'
@@ -31,7 +32,6 @@ export default function DashboardPage() {
     const [createEventOpen, setCreateEventOpen] = useState(false)
 
     // Date range for current month events
-    // Date range for current month events
     const monthStart = startOfMonth(new Date())
     const monthEnd = endOfMonth(new Date())
 
@@ -39,7 +39,6 @@ export default function DashboardPage() {
     const todayStart = startOfDay(new Date())
     const todayEnd = endOfDay(new Date())
 
-    // Queries
     // Queries
     const { data: overview, isLoading } = api.dashboard.getOverview.useQuery({
         // Pass current date/time info (clamped to start of day for stability)
@@ -91,6 +90,13 @@ export default function DashboardPage() {
     const totalHabitsCount = habits?.length ?? 0
     const pendingTasksCount = tasks?.filter(t => t.status === 'pending').length ?? 0
     const activeGoalsCount = goals?.length ?? 0
+
+    // Progress Calculations
+    const habitProgress = totalHabitsCount > 0 ? (completedHabitsCount / totalHabitsCount) * 100 : 0
+
+    const tasksTotal = tasks?.length ?? 0
+    const tasksCompleted = tasksTotal - (tasks?.filter(t => t.status === 'pending').length ?? 0)
+    const taskProgress = tasksTotal > 0 ? (tasksCompleted / tasksTotal) * 100 : 0
 
     // Handle date click on calendar
     const handleDateClick = (date: Date) => {
@@ -230,11 +236,16 @@ export default function DashboardPage() {
                             <CardHeader className="pb-3">
                                 <div className="flex items-center justify-between">
                                     <CardTitle className="text-lg font-semibold">Today's Habits</CardTitle>
-                                    <Link href="/dashboard/habits">
-                                        <Button variant="ghost" size="sm">
-                                            <ChevronRight className="h-4 w-4" />
-                                        </Button>
-                                    </Link>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-24">
+                                            <Progress value={habitProgress} className="h-2" />
+                                        </div>
+                                        <Link href="/dashboard/habits">
+                                            <Button variant="ghost" size="sm">
+                                                <ChevronRight className="h-4 w-4" />
+                                            </Button>
+                                        </Link>
+                                    </div>
                                 </div>
                             </CardHeader>
                             <CardContent className="space-y-2">
@@ -290,11 +301,16 @@ export default function DashboardPage() {
                             <CardHeader className="pb-3">
                                 <div className="flex items-center justify-between">
                                     <CardTitle className="text-lg font-semibold">Today's Tasks</CardTitle>
-                                    <Link href="/dashboard/tasks">
-                                        <Button variant="ghost" size="sm">
-                                            <ChevronRight className="h-4 w-4" />
-                                        </Button>
-                                    </Link>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-24">
+                                            <Progress value={taskProgress} className="h-2" />
+                                        </div>
+                                        <Link href="/dashboard/tasks">
+                                            <Button variant="ghost" size="sm">
+                                                <ChevronRight className="h-4 w-4" />
+                                            </Button>
+                                        </Link>
+                                    </div>
                                 </div>
                             </CardHeader>
                             <CardContent className="space-y-2">
@@ -373,17 +389,17 @@ export default function DashboardPage() {
                         </Card>
                     </div>
                 </div>
+
+                {/* AI Floating Button */}
+                <AIFloatingButton />
+
+                {/* Create Event Modal */}
+                <CreateEventModal
+                    open={createEventOpen}
+                    onOpenChange={setCreateEventOpen}
+                    defaultDate={selectedDate ?? undefined}
+                />
             </main>
-
-            {/* AI Floating Button */}
-            <AIFloatingButton />
-
-            {/* Create Event Modal */}
-            <CreateEventModal
-                open={createEventOpen}
-                onOpenChange={setCreateEventOpen}
-                defaultDate={selectedDate ?? undefined}
-            />
         </div>
     )
 }

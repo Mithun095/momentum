@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
+import { Progress } from '@/components/ui/progress'
 import { TaskCard } from '@/components/tasks/TaskCard'
 import { CreateTaskModal } from '@/components/tasks/CreateTaskModal'
 import { EditTaskModal } from '@/components/tasks/EditTaskModal'
@@ -48,6 +49,11 @@ export default function TasksPage() {
     // Fetch all tasks
     const { data: tasks, isLoading } = api.task.getAll.useQuery({})
     const { data: stats } = api.task.getStats.useQuery()
+
+    // Calculate progress
+    const totalTasks = stats?.total ?? 0
+    const completedTasks = stats?.completed ?? 0
+    const progress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0
 
     const utils = api.useUtils()
 
@@ -217,6 +223,15 @@ export default function TasksPage() {
 
             {/* Main Content */}
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {/* Progress Bar */}
+                <div className="mb-8 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+                    <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Task Completion</span>
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{Math.round(progress)}%</span>
+                    </div>
+                    <Progress value={progress} className="h-2" />
+                </div>
+
                 {/* Stats Cards */}
                 {stats && (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">

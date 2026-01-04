@@ -285,6 +285,105 @@ export const analyticsRouter = createTRPCRouter({
             // CSV format - flatten and convert
             const csvData = convertToCSV(data, input.type)
             return { data: csvData, contentType: 'text/csv' }
+        }),
+
+    // Get habit statistics by category (for Radar Chart)
+    getHabitCategoryStats: protectedProcedure.query(async ({ ctx }) => {
+        const userId = ctx.session.user.id
+
+        // fetch all habits with their completions
+        const habits = await ctx.db.habit.findMany({
+            where: { userId, isActive: true },
+            include: { completions: true }
+        })
+
+        // Group by category
+        const categoryMap: Record<string, { total: number, completed: number }> = {}
+
+        // Initialize with standard categories to ensure radar chart has shape even if empty
+        const standardCategories = ['health', 'work', 'learning', 'mindfulness', 'fitness', 'social']
+        standardCategories.forEach(cat => {
+            categoryMap[cat] = { total: 0, completed: 0 }
+        })
+
+        habits.forEach(habit => {
+            const cat = habit.category?.toLowerCase() || 'other'
+            if (!categoryMap[cat]) {
+                categoryMap[cat] = { total: 0, completed: 0 }
+            }
+            // Count "potential" completions as (frequency * 4 weeks) roughly for a month view, 
+            // but for simple "balance", let's just use raw completion counts relative to other categories
+            // OR better: calculate an "effectiveness" score.
+            // Let's use total completions count for now to show "where user energy is going"
+            categoryMap[cat].total += 1
+            categoryMap[cat].completed += habit.completions.length
+        })
+
+        return Object.entries(categoryMap).map(([category, stats]) => ({
+            category: category.charAt(0).toUpperCase() + category.slice(1),
+            value: stats.completed,
+            fullMark: Math.max(...Object.values(categoryMap).map(s => s.completed), 10) // Scale for radar
+        }))
+    }),
+
+    // Get habit distribution (for Donut Chart)
+    getHabitDistribution: protectedProcedure.query(async ({ ctx }) => {
+        const userId = ctx.session.user.id
+
+        const habits = await ctx.db.habit.findMany({
+            where: { userId, isActive: true },
+            select: { category: true }
+        })
+
+        const distribution: Record<string, number> = {}
+        habits.forEach(h => {
+            const cat = h.category || 'Other'
+            const formattedCat = cat.charAt(0).toUpperCase() + cat.slice(1)
+            distribution[formattedCat] = (distribution[formattedCat] || 0) + 1
+        })
+
+        return Object.entries(distribution).map(([name, value]) => ({
+            name,
+            value
+        }))
+    }),
+
+    // Get completion history (for Area Chart)
+    getCompletionHistory: protectedProcedure
+        .input(z.object({
+            days: z.number().default(30)
+        }))
+        .query(async ({ ctx, input }) => {
+            const userId = ctx.session.user.id
+            const startDate = subDays(new Date(), input.days)
+
+            const completions = await ctx.db.habitCompletion.findMany({
+                where: {
+                    habit: { userId },
+                    status: 'completed',
+                    completionDate: { gte: startDate }
+                },
+                orderBy: { completionDate: 'asc' }
+            })
+
+            const dateMap: Record<string, number> = {}
+            const days = eachDayOfInterval({ start: startDate, end: new Date() })
+
+            days.forEach(day => {
+                dateMap[format(day, 'yyyy-MM-dd')] = 0
+            })
+
+            completions.forEach(c => {
+                const dateKey = format(c.completionDate, 'yyyy-MM-dd')
+                if (dateMap[dateKey] !== undefined) {
+                    dateMap[dateKey]++
+                }
+            })
+
+            return Object.entries(dateMap).map(([date, count]) => ({
+                date,
+                count
+            }))
         })
 })
 
