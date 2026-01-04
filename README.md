@@ -182,6 +182,14 @@ npm run test:all
 1. Create a PostgreSQL database (Supabase, Neon, or Railway)
 2. Update `DATABASE_URL` in production environment
 
+### Deploy with Docker (Self-Hosted)
+1. Ensure Docker and Docker Compose are installed.
+2. Update `docker-compose.prod.yml` with your production secrets (or use an `.env` file).
+3. Run the container:
+```bash
+docker-compose -f docker-compose.prod.yml up -d --build
+```
+
 ### Deploy to Vercel
 ```bash
 npm run build

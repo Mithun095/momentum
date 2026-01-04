@@ -220,7 +220,7 @@ export default function AiAssistantPage() {
             void utils.habit.getStats.invalidate()
             void utils.task.getAll.invalidate()
             void utils.streak.getStreak.invalidate()
-            void utils.user.getStats.invalidate()
+            void utils.analytics.getOverallStats.invalidate()
 
             // Notify about tool actions
             if (data.toolCalls && data.toolCalls.length > 0) {
