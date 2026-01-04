@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { ThemeToggle } from './theme-toggle'
+import { Home, CheckSquare, Book, ClipboardList, BarChart2, Users, Bot } from 'lucide-react'
 
 interface MobileNavProps {
     userName?: string | null
@@ -13,13 +14,13 @@ export function MobileNav({ userName, userEmail }: MobileNavProps) {
     const [isOpen, setIsOpen] = useState(false)
 
     const navLinks = [
-        { href: '/dashboard', label: 'Dashboard', icon: '🏠' },
-        { href: '/dashboard/habits', label: 'Habits', icon: '✅' },
-        { href: '/dashboard/journal', label: 'Journal', icon: '📔' },
-        { href: '/dashboard/tasks', label: 'Tasks', icon: '📋' },
-        { href: '/dashboard/analytics', label: 'Analytics', icon: '📊' },
-        { href: '/dashboard/workspace', label: 'Workspaces', icon: '👥' },
-        { href: '/dashboard/ai', label: 'AI Assistant', icon: '🤖' },
+        { href: '/dashboard', label: 'Dashboard', icon: <Home className="w-5 h-5" /> },
+        { href: '/dashboard/habits', label: 'Habits', icon: <CheckSquare className="w-5 h-5" /> },
+        { href: '/dashboard/journal', label: 'Journal', icon: <Book className="w-5 h-5" /> },
+        { href: '/dashboard/tasks', label: 'Tasks', icon: <ClipboardList className="w-5 h-5" /> },
+        { href: '/dashboard/analytics', label: 'Analytics', icon: <BarChart2 className="w-5 h-5" /> },
+        { href: '/dashboard/workspace', label: 'Workspaces', icon: <Users className="w-5 h-5" /> },
+        { href: '/dashboard/ai', label: 'AI Assistant', icon: <Bot className="w-5 h-5" /> },
     ]
 
     return (
@@ -105,7 +106,7 @@ export function MobileNav({ userName, userEmail }: MobileNavProps) {
                                     onClick={() => setIsOpen(false)}
                                     className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                                 >
-                                    <span className="text-xl">{link.icon}</span>
+                                    {link.icon}
                                     <span>{link.label}</span>
                                 </Link>
                             </li>

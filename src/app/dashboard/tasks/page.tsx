@@ -343,7 +343,7 @@ export default function TasksPage() {
                 ) : !filteredTasks || filteredTasks.length === 0 ? (
                     <Card className="py-16">
                         <CardContent className="text-center">
-                            <div className="text-6xl mb-4">📋</div>
+                            <ListTodo className="h-16 w-16 text-gray-300 dark:text-gray-600 mb-4 mx-auto" />
                             <h3 className="text-2xl font-semibold mb-2 text-gray-900 dark:text-gray-100">
                                 {searchQuery || statusFilter !== 'all' || priorityFilter !== 'all' || categoryFilter !== 'all'
                                     ? 'No tasks found'

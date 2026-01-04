@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { Bot, CheckCircle2, ClipboardList, Book, BarChart2 } from 'lucide-react'
 
 interface ConsentBannerProps {
     onConsent: (granted: boolean) => void
@@ -31,7 +32,7 @@ export function ConsentBanner({ onConsent }: ConsentBannerProps) {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md mx-4 p-6">
                 <div className="text-center mb-6">
-                    <div className="text-4xl mb-4">🤖</div>
+                    <Bot className="h-12 w-12 text-purple-600 mb-4 mx-auto" />
                     <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                         Enable AI Assistant
                     </h2>
@@ -46,16 +47,16 @@ export function ConsentBanner({ onConsent }: ConsentBannerProps) {
                     </h3>
                     <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
                         <li className="flex items-center gap-2">
-                            <span>✅</span> Your habits and completion history
+                            <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Your habits and completion history
                         </li>
                         <li className="flex items-center gap-2">
-                            <span>📋</span> Your tasks and due dates
+                            <ClipboardList className="w-4 h-4 text-blue-500" /> Your tasks and due dates
                         </li>
                         <li className="flex items-center gap-2">
-                            <span>📔</span> Your journal moods (not full entries)
+                            <Book className="w-4 h-4 text-purple-500" /> Your journal moods (not full entries)
                         </li>
                         <li className="flex items-center gap-2">
-                            <span>📊</span> Your productivity statistics
+                            <BarChart2 className="w-4 h-4 text-indigo-500" /> Your productivity statistics
                         </li>
                     </ul>
                 </div>

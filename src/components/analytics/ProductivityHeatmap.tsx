@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
+import { CalendarDays } from 'lucide-react'
 
 interface HeatmapData {
     date: string
@@ -107,7 +108,7 @@ export function ProductivityHeatmap({ data }: ProductivityHeatmapProps) {
     if (!data || data.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center h-48 bg-gray-50/50 dark:bg-gray-800/50 rounded-xl border border-dashed border-gray-200 dark:border-gray-700">
-                <div className="text-4xl mb-3 opacity-50">📅</div>
+                <CalendarDays className="h-12 w-12 text-gray-400 dark:text-gray-500 mb-3 opacity-50" />
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400">No activity recorded yet</p>
                 <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Consistency starts today!</p>
             </div>

@@ -22,6 +22,7 @@ import {
     Target,
     Calendar,
     Sparkles,
+    PenLine,
 } from 'lucide-react'
 import { format, startOfMonth, endOfMonth, startOfDay, endOfDay } from 'date-fns'
 
@@ -150,7 +151,7 @@ export default function DashboardPage() {
                 {/* Greeting */}
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                        {greeting()}, {session?.user?.name?.split(' ')[0] || 'there'}! 👋
+                        {greeting()}, {session?.user?.name?.split(' ')[0] || 'there'}!
                     </h1>
                     <p className="text-gray-600 dark:text-gray-400 mt-1">
                         Here's your overview for today
@@ -213,7 +214,7 @@ export default function DashboardPage() {
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                                            📖
+                                            <PenLine className="h-6 w-6 text-gray-900 dark:text-white" />
                                         </p>
                                         <p className="text-sm text-gray-500">Journal</p>
                                     </div>

@@ -1,5 +1,7 @@
 'use client'
 
+import { ArrowUp, ArrowDown, Minus, CheckSquare, ClipboardList, Book } from 'lucide-react'
+
 interface MonthlyTrendProps {
     data: {
         monthName: string
@@ -23,9 +25,9 @@ interface MonthlyTrendProps {
 
 export function MonthlyTrend({ data }: MonthlyTrendProps) {
     const getTrendIcon = (trend: number) => {
-        if (trend > 0) return '↑'
-        if (trend < 0) return '↓'
-        return '→'
+        if (trend > 0) return <ArrowUp className="w-5 h-5" />
+        if (trend < 0) return <ArrowDown className="w-5 h-5" />
+        return <Minus className="w-5 h-5" />
     }
 
     const getTrendColor = (trend: number) => {
@@ -40,21 +42,21 @@ export function MonthlyTrend({ data }: MonthlyTrendProps) {
             value: data.current.habitsCompleted,
             previous: data.previous.habitsCompleted,
             trend: data.trends.habits,
-            icon: '✅'
+            icon: <CheckSquare className="w-6 h-6 text-emerald-500" />
         },
         {
             label: 'Tasks Completed',
             value: data.current.tasksCompleted,
             previous: data.previous.tasksCompleted,
             trend: data.trends.tasks,
-            icon: '📋'
+            icon: <ClipboardList className="w-6 h-6 text-blue-500" />
         },
         {
             label: 'Journal Entries',
             value: data.current.journalEntries,
             previous: data.previous.journalEntries,
             trend: data.trends.journals,
-            icon: '📔'
+            icon: <Book className="w-6 h-6 text-purple-500" />
         }
     ]
 
@@ -68,7 +70,7 @@ export function MonthlyTrend({ data }: MonthlyTrendProps) {
                 {stats.map((stat) => (
                     <div key={stat.label} className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <span className="text-2xl">{stat.icon}</span>
+                            {stat.icon}
                             <div>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">{stat.label}</p>
                                 <p className="text-xl font-bold text-gray-900 dark:text-white">
@@ -78,7 +80,7 @@ export function MonthlyTrend({ data }: MonthlyTrendProps) {
                         </div>
                         <div className="text-right">
                             <div className={`flex items-center gap-1 ${getTrendColor(stat.trend)}`}>
-                                <span className="text-lg">{getTrendIcon(stat.trend)}</span>
+                                <span className="flex items-center justify-center w-5 h-5">{getTrendIcon(stat.trend)}</span>
                                 <span className="font-medium">
                                     {Math.abs(stat.trend)}%
                                 </span>

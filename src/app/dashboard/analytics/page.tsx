@@ -16,7 +16,7 @@ import { GrowthAreaChart } from '@/components/analytics/GrowthAreaChart'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, TrendingUp, Radar, PieChart, Waves, Calendar, Flame, BarChart2, Lightbulb, AlertTriangle, Sparkles, Dumbbell } from 'lucide-react'
 
 export default function AnalyticsPage() {
     const { data: session, status } = useSession()
@@ -121,7 +121,7 @@ export default function AnalyticsPage() {
                             {/* Momentum Growth */}
                             <Card className="col-span-1 lg:col-span-2 shadow-sm hover:shadow-md transition-shadow">
                                 <CardHeader>
-                                    <CardTitle>Momentum Growth 🚀</CardTitle>
+                                    <CardTitle className="flex items-center gap-2">Momentum Growth <TrendingUp className="h-5 w-5 text-indigo-500" /></CardTitle>
                                     <p className="text-sm text-gray-500 dark:text-gray-400">Your inconsistency trend over the last 30 days</p>
                                 </CardHeader>
                                 <CardContent>
@@ -132,7 +132,7 @@ export default function AnalyticsPage() {
                             {/* Life Balance Radar */}
                             <Card className="shadow-sm hover:shadow-md transition-shadow">
                                 <CardHeader>
-                                    <CardTitle>Life Balance 🕸️</CardTitle>
+                                    <CardTitle className="flex items-center gap-2">Life Balance <Radar className="h-5 w-5 text-purple-500" /></CardTitle>
                                     <p className="text-sm text-gray-500 dark:text-gray-400">Habit completions by category</p>
                                 </CardHeader>
                                 <CardContent>
@@ -143,7 +143,7 @@ export default function AnalyticsPage() {
                             {/* Habit Distribution Donut */}
                             <Card className="shadow-sm hover:shadow-md transition-shadow">
                                 <CardHeader>
-                                    <CardTitle>Focus Areas 🍩</CardTitle>
+                                    <CardTitle className="flex items-center gap-2">Focus Areas <PieChart className="h-5 w-5 text-pink-500" /></CardTitle>
                                     <p className="text-sm text-gray-500 dark:text-gray-400">Distribution of active habits</p>
                                 </CardHeader>
                                 <CardContent>
@@ -154,7 +154,7 @@ export default function AnalyticsPage() {
                             {/* Mood Chart */}
                             <Card className="shadow-sm hover:shadow-md transition-shadow">
                                 <CardHeader>
-                                    <CardTitle>Mood Trends 🌊</CardTitle>
+                                    <CardTitle className="flex items-center gap-2">Mood Trends <Waves className="h-5 w-5 text-blue-500" /></CardTitle>
                                 </CardHeader>
                                 <CardContent>
                                     <MoodChart data={moodStats || []} />
@@ -165,7 +165,7 @@ export default function AnalyticsPage() {
                             {weeklySummary && (
                                 <Card className="shadow-sm hover:shadow-md transition-shadow">
                                     <CardHeader>
-                                        <CardTitle>Weekly Snapshot 📅</CardTitle>
+                                        <CardTitle className="flex items-center gap-2">Weekly Snapshot <Calendar className="h-5 w-5 text-green-500" /></CardTitle>
                                     </CardHeader>
                                     <CardContent>
                                         <WeeklyReport data={weeklySummary} />
@@ -177,7 +177,7 @@ export default function AnalyticsPage() {
                         {/* Productivity Heatmap */}
                         <Card className="shadow-sm hover:shadow-md transition-shadow">
                             <CardHeader>
-                                <CardTitle>Consistency Heatmap 🔥</CardTitle>
+                                <CardTitle className="flex items-center gap-2">Consistency Heatmap <Flame className="h-5 w-5 text-orange-500" /></CardTitle>
                                 <p className="text-sm text-gray-500 dark:text-gray-400">Activity intensity over the last 3 months</p>
                             </CardHeader>
                             <CardContent>
@@ -190,7 +190,7 @@ export default function AnalyticsPage() {
                             {monthlySummary && (
                                 <Card className="shadow-sm hover:shadow-md transition-shadow">
                                     <CardHeader>
-                                        <CardTitle>Monthly Comparison 📊</CardTitle>
+                                        <CardTitle className="flex items-center gap-2">Monthly Comparison <BarChart2 className="h-5 w-5 text-blue-600" /></CardTitle>
                                     </CardHeader>
                                     <CardContent>
                                         <MonthlyTrend data={monthlySummary} />
@@ -201,20 +201,20 @@ export default function AnalyticsPage() {
                             {/* Insights Card */}
                             <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-900/30 border-l-4 border-l-indigo-500">
                                 <CardHeader>
-                                    <CardTitle>AI Insights 💡</CardTitle>
+                                    <CardTitle className="flex items-center gap-2">AI Insights <Lightbulb className="h-5 w-5 text-yellow-500" /></CardTitle>
                                 </CardHeader>
                                 <CardContent>
                                     <ul className="space-y-3 text-sm text-gray-700 dark:text-gray-300">
                                         {weeklySummary && weeklySummary.habitCompletionRate < 50 && (
-                                            <li className="flex gap-2"><span className="text-xl">⚠️</span> Habit completion is low ({weeklySummary.habitCompletionRate}%). Focus on 1-2 key habits this week.</li>
+                                            <li className="flex gap-2 items-start"><AlertTriangle className="h-5 w-5 text-yellow-500 shrink-0" /> <span className="flex-1">Habit completion is low ({weeklySummary.habitCompletionRate}%). Focus on 1-2 key habits this week.</span></li>
                                         )}
                                         {overallStats && overallStats.longestStreak > 5 && (
-                                            <li className="flex gap-2"><span className="text-xl">🔥</span> You're on fire! Longest streak is {overallStats.longestStreak} days. Don't break the chain!</li>
+                                            <li className="flex gap-2 items-start"><Flame className="h-5 w-5 text-orange-500 shrink-0" /> <span className="flex-1">You're on fire! Longest streak is {overallStats.longestStreak} days. Don't break the chain!</span></li>
                                         )}
                                         {categoryStats && categoryStats.length > 0 && [...categoryStats].sort((a, b) => b.value - a.value)[0]?.category === 'Health' && (
-                                            <li className="flex gap-2"><span className="text-xl">💪</span> You are prioritizing Health heavily. Great foundation!</li>
+                                            <li className="flex gap-2 items-start"><Dumbbell className="h-5 w-5 text-emerald-500 shrink-0" /> <span className="flex-1">You are prioritizing Health heavily. Great foundation!</span></li>
                                         )}
-                                        <li className="flex gap-2"><span className="text-xl">✨</span> {monthlySummary?.trends.habits && monthlySummary.trends.habits > 0 ? `You're ${monthlySummary.trends.habits}% more consistent than last month!` : "Consistency is key. Keep showing up!"}</li>
+                                        <li className="flex gap-2 items-start"><Sparkles className="h-5 w-5 text-indigo-500 shrink-0" /> <span className="flex-1">{monthlySummary?.trends.habits && monthlySummary.trends.habits > 0 ? `You're ${monthlySummary.trends.habits}% more consistent than last month!` : "Consistency is key. Keep showing up!"}</span></li>
                                     </ul>
                                 </CardContent>
                             </Card>
