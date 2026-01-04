@@ -36,13 +36,10 @@ export const HabitList = React.memo(function HabitList({ habits, isLoading }: Ha
     const utils = api.useUtils()
 
     // Get date range for today (stable across renders)
-    const { startDate, endDate } = useMemo(() => {
-        const today = new Date()
-        return {
-            startDate: startOfDay(today),
-            endDate: endOfDay(today),
-        }
-    }, [])
+    // Get date range for today
+    const today = new Date()
+    const startDate = startOfDay(today)
+    const endDate = endOfDay(today)
 
     // Fetch today's completions
     const { data: completions } = api.habit.getAllCompletions.useQuery(
@@ -89,7 +86,7 @@ export const HabitList = React.memo(function HabitList({ habits, isLoading }: Ha
                             id: 'temp-id-' + Math.random(),
                             habitId: newHabit.habitId,
                             completionDate: newHabit.date,
-                            status: newHabit.status,
+                            status: newHabit.status || 'completed',
                             notes: newHabit.notes || null,
                             createdAt: new Date(),
                         },

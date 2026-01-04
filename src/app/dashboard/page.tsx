@@ -31,39 +31,39 @@ export default function DashboardPage() {
     const [createEventOpen, setCreateEventOpen] = useState(false)
 
     // Date range for current month events
-    const { monthStart, monthEnd } = useMemo(() => ({
-        monthStart: startOfMonth(new Date()),
-        monthEnd: endOfMonth(new Date()),
-    }), [])
+    // Date range for current month events
+    const monthStart = startOfMonth(new Date())
+    const monthEnd = endOfMonth(new Date())
 
     // Today's date range
-    const { todayStart, todayEnd } = useMemo(() => ({
-        todayStart: startOfDay(new Date()),
-        todayEnd: endOfDay(new Date()),
-    }), [])
+    const todayStart = startOfDay(new Date())
+    const todayEnd = endOfDay(new Date())
 
     // Queries
-    const { data: habits, isLoading: habitsLoading } = api.habit.getAll.useQuery()
-    const { data: completions } = api.habit.getAllCompletions.useQuery(
-        { startDate: todayStart, endDate: todayEnd },
-        { enabled: !!habits && habits.length > 0 }
-    )
-    const { data: tasks, isLoading: tasksLoading } = api.task.getToday.useQuery()
-    const { data: events } = api.event.getByMonth.useQuery({
+    // Queries
+    const { data: overview, isLoading } = api.dashboard.getOverview.useQuery({
+        // Pass current date/time info (clamped to start of day for stability)
+        date: startOfDay(new Date()),
         year: new Date().getFullYear(),
         month: new Date().getMonth() + 1,
     })
-    const { data: goals } = api.goal.getActive.useQuery()
+
+    const habits = overview?.habits
+    const completions = overview?.completions
+    const tasks = overview?.tasks
+    const events = overview?.events
+    const goals = overview?.goals
+
+    const habitsLoading = isLoading
+    const tasksLoading = isLoading
 
     const utils = api.useUtils()
 
     // Complete habit mutation
     const completeHabit = api.habit.markComplete.useMutation({
         onSuccess: () => {
-            // Invalidate all related queries for fresh data
-            void utils.habit.getAllCompletions.invalidate()
-            void utils.habit.getStats.invalidate()
-            void utils.habit.getAll.invalidate()
+            // Invalidate overview query
+            void utils.dashboard.getOverview.invalidate()
         },
     })
 

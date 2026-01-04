@@ -3,7 +3,7 @@
 import React, { useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid } from 'recharts'
-import Skeleton from '@/components/ui/Skeleton'
+import { Skeleton } from '@/components/ui/skeleton'
 import { format, sub, eachDayOfInterval } from 'date-fns'
 
 interface HabitCompletion {

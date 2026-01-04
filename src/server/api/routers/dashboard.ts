@@ -2,70 +2,85 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 
 export const dashboardRouter = createTRPCRouter({
-    getData: protectedProcedure.query(async ({ ctx }) => {
-        const userId = ctx.session.user.id;
+    getOverview: protectedProcedure
+        .input(
+            z.object({
+                date: z.date().optional(), // For "today" queries
+                year: z.number().optional(), // For calendar
+                month: z.number().optional(), // For calendar
+            })
+        )
+        .query(async ({ ctx, input }) => {
+            const userId = ctx.session.user.id
+            const today = input.date || new Date()
+            const todayStart = new Date(today)
+            todayStart.setHours(0, 0, 0, 0)
+            const todayEnd = new Date(today)
+            todayEnd.setHours(23, 59, 59, 999)
 
-        // Parallelize DB queries for maximum speed
-        const [habits, tasks, taskStats, journalCount] = await Promise.all([
-            // 1. Get Habits
-            ctx.db.habit.findMany({
-                where: { userId },
-                include: { completions: true },
-                orderBy: { createdAt: "desc" },
-            }),
-            // 2. Get Today's Tasks
-            ctx.db.task.findMany({
-                where: {
-                    userId,
-                    status: { not: "completed" },
-                    dueDate: {
-                        gte: new Date(new Date().setHours(0, 0, 0, 0)),
-                        lte: new Date(new Date().setHours(23, 59, 59, 999)),
-                    },
-                },
-                orderBy: { priority: "desc" },
-            }),
-            // 3. Get Task Stats
-            ctx.db.task.groupBy({
-                by: ["status"],
-                where: { userId },
-                _count: true,
-            }).then(async (groups) => {
-                const pending = groups.find((g) => g.status === "pending")?._count || 0;
-                const completed = groups.find((g) => g.status === "completed")?._count || 0;
+            // Calculate month range for events
+            const year = input.year || today.getFullYear()
+            const month = input.month || (today.getMonth() + 1)
+            const monthStart = new Date(year, month - 1, 1)
+            const monthEnd = new Date(year, month, 0, 23, 59, 59, 999)
 
-                // Separate overdue check
-                const overdue = await ctx.db.task.count({
+            const [habits, completions, tasks, events, goals] = await Promise.all([
+                // 1. Get Active Habits
+                ctx.db.habit.findMany({
+                    where: { userId, isActive: true },
+                    orderBy: { createdAt: 'desc' },
+                }),
+                // 2. Get Today's Completions (using relation filtering)
+                ctx.db.habitCompletion.findMany({
                     where: {
-                        userId,
-                        dueDate: { lt: new Date() },
-                        status: "pending" // Correct status check for overdue
-                    }
-                });
-
-                const todayCount = await ctx.db.task.count({
+                        habit: { userId },
+                        completionDate: {
+                            gte: todayStart,
+                            lte: todayEnd,
+                        },
+                    },
+                    orderBy: { completionDate: 'asc' },
+                }),
+                // 3. Get Today's Tasks
+                ctx.db.task.findMany({
                     where: {
                         userId,
                         dueDate: {
-                            gte: new Date(new Date().setHours(0, 0, 0, 0)),
-                            lte: new Date(new Date().setHours(23, 59, 59, 999)),
-                        }
-                    }
-                });
+                            gte: todayStart,
+                            lte: todayEnd,
+                        },
+                    },
+                    orderBy: [{ status: 'asc' }, { priority: 'desc' }],
+                }),
+                // 4. Get Month's Events
+                ctx.db.event.findMany({
+                    where: {
+                        userId,
+                        startTime: {
+                            gte: monthStart,
+                            lte: monthEnd,
+                        },
+                    },
+                    orderBy: { startTime: 'asc' },
+                }),
+                // 5. Get Active Goals
+                ctx.db.goal.findMany({
+                    where: { userId, status: 'active' },
+                    include: {
+                        milestones: {
+                            orderBy: { order: 'asc' },
+                        },
+                    },
+                    orderBy: { createdAt: 'desc' },
+                }),
+            ])
 
-                return { pending, completed, overdue, todayTasks: todayCount };
-            }),
-            // 4. Get Journal Stats
-            ctx.db.journalEntry.count({
-                where: { userId },
-            }),
-        ]);
-
-        return {
-            habits,
-            todayTasks: tasks,
-            taskStats,
-            journalStats: { totalEntries: journalCount },
-        };
-    }),
+            return {
+                habits,
+                completions,
+                tasks,
+                events,
+                goals,
+            }
+        }),
 });
