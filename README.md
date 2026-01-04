@@ -45,6 +45,10 @@
 - Productivity heatmaps
 - Customizable dashboards
 
+### 📚 Documentation
+- [User Guide](docs/USER_GUIDE.md) - Detailed usage instructions
+- [Project Status](docs/PROJECT_STATUS.md) - Development roadmap
+
 ### 🎨 Theming
 - **Light Mode**: Clean and professional
 - **Dark Mode**: Easy on the eyes
@@ -165,16 +169,7 @@ momentum/
 
 ## 🧪 Testing
 
-```bash
-# Run unit tests
-npm test
-
-# Run e2e tests
-npm run test:e2e
-
-# Run all tests
-npm run test:all
-```
+Automated tests have been removed to streamline the project structure. Please verify changes manually before submitting a Pull Request.
 
 ## 🚀 Deployment
 
@@ -202,7 +197,7 @@ See `.env.example` for all available environment variables.
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please read our contributing guidelines.
+Contributions are welcome! Please read our [contributing guidelines](docs/CONTRIBUTING.md).
 
 ## 📄 License
 
