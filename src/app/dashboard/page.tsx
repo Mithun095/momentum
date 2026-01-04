@@ -67,6 +67,12 @@ export default function DashboardPage() {
         },
     })
 
+    const removeCompletion = api.habit.removeCompletion.useMutation({
+        onSuccess: () => {
+            void utils.dashboard.getOverview.invalidate()
+        },
+    })
+
     // Toggle task mutation
     const toggleTask = api.task.toggleComplete.useMutation({
         onSuccess: () => {
@@ -252,6 +258,8 @@ export default function DashboardPage() {
                                                 onClick={() => {
                                                     if (!isCompleted) {
                                                         completeHabit.mutate({ habitId: habit.id, date: new Date() })
+                                                    } else {
+                                                        removeCompletion.mutate({ habitId: habit.id, date: new Date() })
                                                     }
                                                 }}
                                             >

@@ -139,11 +139,84 @@ export const HabitList = React.memo(function HabitList({ habits, isLoading }: Ha
         },
     })
 
+    const removeCompletion = api.habit.removeCompletion.useMutation({
+        onMutate: async (variables: { habitId: string; date: Date }) => {
+            await utils.habit.getAllCompletions.cancel()
+            await utils.habit.getStats.cancel()
+
+            const previousCompletions = utils.habit.getAllCompletions.getData({ startDate, endDate })
+            const previousStats = utils.habit.getStats.getData()
+
+            if (previousCompletions) {
+                utils.habit.getAllCompletions.setData({ startDate, endDate }, (old) => {
+                    if (!old) return []
+                    return old.filter(
+                        (c) =>
+                            !(
+                                c.habitId === variables.habitId &&
+                                format(new Date(c.completionDate), 'yyyy-MM-dd') ===
+                                format(new Date(variables.date), 'yyyy-MM-dd')
+                            )
+                    )
+                })
+            }
+
+            if (previousStats) {
+                utils.habit.getStats.setData(undefined, (old) => {
+                    if (!old) return {}
+                    const habitStats = old[variables.habitId]
+                    if (!habitStats) return old
+
+                    return {
+                        ...old,
+                        [variables.habitId]: {
+                            streak: Math.max(0, habitStats.streak - 1),
+                            totalCompletions: Math.max(0, habitStats.totalCompletions - 1),
+                        },
+                    }
+                })
+            }
+
+            return { previousCompletions, previousStats }
+        },
+        onError: (err: any, variables: { habitId: string; date: Date }, context: any) => {
+            if (context?.previousCompletions) {
+                utils.habit.getAllCompletions.setData({ startDate, endDate }, context.previousCompletions)
+            }
+            if (context?.previousStats) {
+                utils.habit.getStats.setData(undefined, context.previousStats)
+            }
+            toast({
+                title: 'Error',
+                description: 'Failed to undo completion',
+                variant: 'destructive',
+            })
+        },
+        onSettled: () => {
+            void utils.habit.getAllCompletions.invalidate()
+            void utils.habit.getStats.invalidate()
+            void utils.habit.getAll.invalidate()
+        },
+        onSuccess: () => {
+            toast({
+                title: 'Undone',
+                description: 'Habit completion removed',
+            })
+        },
+    })
+
     const handleQuickComplete = (habitId: string) => {
         markComplete.mutate({
             habitId,
             date: new Date(),
             status: 'completed',
+        })
+    }
+
+    const handleUndoComplete = (habitId: string) => {
+        removeCompletion.mutate({
+            habitId,
+            date: new Date(),
         })
     }
 
@@ -247,9 +320,17 @@ export const HabitList = React.memo(function HabitList({ habits, isLoading }: Ha
                             </CardHeader>
                             <CardContent>
                                 {isCompleted ? (
-                                    <div className="w-full py-2 text-center text-green-600 dark:text-green-400 font-medium">
-                                        ✅ Completed for Today
-                                    </div>
+                                    <Button
+                                        variant="ghost"
+                                        className="w-full py-2 text-center text-green-600 dark:text-green-400 font-medium hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400 transition-colors"
+                                        onClick={() => handleUndoComplete(habit.id)}
+                                        disabled={removeCompletion.isPending}
+                                    >
+                                        <div className="flex items-center justify-center gap-2">
+                                            <span>✅ Completed</span>
+                                            <span className="text-xs opacity-0 group-hover/btn:opacity-100">(Click to Undo)</span>
+                                        </div>
+                                    </Button>
                                 ) : (
                                     <Button
                                         className="w-full bg-gray-800 hover:bg-gray-700 dark:bg-gray-200 dark:hover:bg-gray-300 dark:text-gray-900"

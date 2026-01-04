@@ -117,6 +117,32 @@ export const habitRouter = createTRPCRouter({
             })
         }),
 
+    removeCompletion: protectedProcedure
+        .input(
+            z.object({
+                habitId: z.string(),
+                date: z.date(),
+            })
+        )
+        .mutation(async ({ ctx, input }) => {
+            const userId = ctx.session.user.id
+
+            // Verify the user owns this habit
+            const habit = await ctx.db.habit.findFirst({
+                where: { id: input.habitId, userId },
+            })
+            if (!habit) {
+                throw new Error('Habit not found')
+            }
+
+            return await ctx.db.habitCompletion.deleteMany({
+                where: {
+                    habitId: input.habitId,
+                    completionDate: input.date,
+                },
+            })
+        }),
+
     getCompletions: protectedProcedure
         .input(
             z.object({
