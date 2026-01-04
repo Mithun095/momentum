@@ -67,6 +67,13 @@ export default function DashboardPage() {
         },
     })
 
+    // Toggle task mutation
+    const toggleTask = api.task.toggleComplete.useMutation({
+        onSuccess: () => {
+            void utils.dashboard.getOverview.invalidate()
+        },
+    })
+
     // Map of completed habits today
     const completedToday = useMemo(() => {
         if (!completions) return new Set<string>()
@@ -288,24 +295,38 @@ export default function DashboardPage() {
                                         <Skeleton key={i} className="h-12" />
                                     ))
                                 ) : tasks && tasks.length > 0 ? (
-                                    tasks.slice(0, 5).map((task) => (
-                                        <div
-                                            key={task.id}
-                                            className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
-                                        >
-                                            <div className={`
-                                                w-2 h-2 rounded-full
-                                                ${task.priority === 'high' ? 'bg-red-500' :
-                                                    task.priority === 'medium' ? 'bg-yellow-500' : 'bg-gray-400'}
-                                            `} />
-                                            <span className="flex-1 text-gray-900 dark:text-white truncate">
-                                                {task.title}
-                                            </span>
-                                            <Badge variant="secondary" className="text-xs">
-                                                {task.priority}
-                                            </Badge>
-                                        </div>
-                                    ))
+                                    tasks.slice(0, 5).map((task) => {
+                                        const isCompleted = task.status === 'completed'
+                                        return (
+                                            <div
+                                                key={task.id}
+                                                className={`
+                                                    flex items-center gap-3 p-3 rounded-lg border transition-all duration-200 cursor-pointer
+                                                    ${isCompleted
+                                                        ? 'bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800'
+                                                        : 'hover:bg-gray-50 dark:hover:bg-gray-800 border-gray-200 dark:border-gray-700'
+                                                    }
+                                                `}
+                                                onClick={() => toggleTask.mutate({ id: task.id })}
+                                            >
+                                                <div className={`
+                                                    flex items-center justify-center w-5 h-5 rounded-full border transition-colors
+                                                    ${isCompleted
+                                                        ? 'bg-blue-500 border-blue-500 text-white'
+                                                        : 'border-gray-300 dark:border-gray-600 hover:border-blue-500'
+                                                    }
+                                                `}>
+                                                    {isCompleted && <CheckCircle2 className="h-3.5 w-3.5" />}
+                                                </div>
+                                                <span className={`flex-1 ${isCompleted ? 'line-through text-gray-500' : 'text-gray-900 dark:text-white'} truncate`}>
+                                                    {task.title}
+                                                </span>
+                                                <Badge variant="secondary" className="text-xs">
+                                                    {task.priority}
+                                                </Badge>
+                                            </div>
+                                        )
+                                    })
                                 ) : (
                                     <div className="text-center py-6 text-gray-500">
                                         <p>No tasks for today</p>
