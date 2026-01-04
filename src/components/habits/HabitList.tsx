@@ -12,6 +12,17 @@ import { EditHabitModal } from './EditHabitModal'
 import { api } from '@/lib/trpc/client'
 import { useToast } from '@/hooks/use-toast'
 import { format, startOfDay, endOfDay } from 'date-fns'
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 
 interface Habit {
     id: string
@@ -311,18 +322,32 @@ export const HabitList = React.memo(function HabitList({ habits, isLoading }: Ha
                                         >
                                             <Edit className="h-4 w-4" />
                                         </Button>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-                                            onClick={() => {
-                                                if (confirm('Are you sure you want to delete this habit?')) {
-                                                    deleteHabit.mutate({ id: habit.id })
-                                                }
-                                            }}
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>Delete Habit</AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                        Are you sure you want to delete <span className="font-semibold text-gray-900 dark:text-white">"{habit.name}"</span>?
+                                                        This action cannot be undone and will remove all tracking data for this habit.
+                                                    </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                    <AlertDialogAction onClick={() => deleteHabit.mutate({ id: habit.id })}>
+                                                        Delete
+                                                    </AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
                                     </div>
                                 </div>
                                 <div className="flex gap-2 mt-3">

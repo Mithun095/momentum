@@ -192,11 +192,8 @@ export default function TasksPage() {
     }
 
     const handleDelete = (id: string) => {
-        if (confirm('Are you sure you want to delete this task?')) {
-            deleteTask.mutate({ id })
-        }
+        deleteTask.mutate({ id })
     }
-
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
             {/* Top Navigation */}
