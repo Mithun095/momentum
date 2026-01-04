@@ -2,9 +2,12 @@
 
 import { useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
+import { LandingNavbar } from '@/components/layout/LandingNavbar'
+import { LandingFooter } from '@/components/layout/LandingFooter'
 import {
   CheckCircle,
   Calendar,
@@ -44,26 +47,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       {/* Navigation */}
-      <nav className="border-b border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">M</span>
-            </div>
-            <span className="text-xl font-semibold text-gray-900 dark:text-white">Momentum</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link href="/auth/signin">
-              <Button variant="ghost" size="sm">Sign In</Button>
-            </Link>
-            <Link href="/auth/signup">
-              <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700">
-                Get Started
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <LandingNavbar />
 
       {/* Hero Section */}
       <section className="py-24 px-6">
@@ -186,22 +170,12 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-8 px-6 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-gradient-to-br from-indigo-500 to-purple-600 rounded flex items-center justify-center">
-              <span className="text-white font-bold text-xs">M</span>
-            </div>
-            <span className="text-sm text-gray-600 dark:text-gray-400">Momentum</span>
-          </div>
-          <p className="text-sm text-gray-500">
-            Build better habits. Achieve your goals.
-          </p>
-        </div>
-      </footer>
+      <LandingFooter />
     </div>
   )
 }
+
+
 
 function FeatureCard({ icon: Icon, title, description }: {
   icon: React.ComponentType<{ className?: string }>,
