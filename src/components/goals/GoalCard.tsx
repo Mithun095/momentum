@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -49,7 +50,7 @@ const categoryColors: Record<string, string> = {
     other: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
 }
 
-export function GoalCard({ goal, onEdit, onDelete, onClick }: GoalCardProps) {
+export const GoalCard = React.memo(function GoalCard({ goal, onEdit, onDelete, onClick }: GoalCardProps) {
     const completedMilestones = goal.milestones.filter(m => m.isCompleted).length
     const totalMilestones = goal.milestones.length
     const progressPercent = Math.round(goal.progress)
@@ -142,4 +143,4 @@ export function GoalCard({ goal, onEdit, onDelete, onClick }: GoalCardProps) {
             </CardContent>
         </Card>
     )
-}
+})

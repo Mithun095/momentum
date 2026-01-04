@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import React, { useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
@@ -17,7 +17,7 @@ interface TodayHabitsProps {
     className?: string
 }
 
-export function TodayHabits({ className }: TodayHabitsProps) {
+export const TodayHabits = React.memo(function TodayHabits({ className }: TodayHabitsProps) {
     const { toast } = useToast()
     const { data: habits, isLoading } = api.habit.getAll.useQuery()
 
@@ -91,6 +91,8 @@ export function TodayHabits({ className }: TodayHabitsProps) {
             // Refetch to ensure data is in sync
             void utils.habit.getAll.invalidate()
             void utils.habit.getAllCompletions.invalidate()
+            // Also invalidate stats to refresh streak counts
+            void utils.habit.getStats.invalidate()
         },
     })
 
@@ -179,7 +181,7 @@ export function TodayHabits({ className }: TodayHabitsProps) {
                         return (
                             <div
                                 key={habit.id}
-                                className="flex items-center justify-between p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                                className="flex items-center justify-between p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200"
                             >
                                 <div className="flex items-center gap-3">
                                     <span className="text-2xl">{habit.icon || category.icon}</span>
@@ -236,4 +238,4 @@ export function TodayHabits({ className }: TodayHabitsProps) {
             </CardContent>
         </Card>
     )
-}
+})

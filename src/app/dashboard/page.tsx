@@ -60,7 +60,10 @@ export default function DashboardPage() {
     // Complete habit mutation
     const completeHabit = api.habit.markComplete.useMutation({
         onSuccess: () => {
+            // Invalidate all related queries for fresh data
             void utils.habit.getAllCompletions.invalidate()
+            void utils.habit.getStats.invalidate()
+            void utils.habit.getAll.invalidate()
         },
     })
 
@@ -141,7 +144,7 @@ export default function DashboardPage() {
                 {/* Quick Stats Row */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                     <Link href="/dashboard/habits">
-                        <Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-green-500">
+                        <Card className="hover:shadow-md hover:scale-[1.02] transition-all duration-200 cursor-pointer border-l-4 border-l-green-500">
                             <CardContent className="p-4">
                                 <div className="flex items-center justify-between">
                                     <div>
@@ -157,7 +160,7 @@ export default function DashboardPage() {
                     </Link>
 
                     <Link href="/dashboard/tasks">
-                        <Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-blue-500">
+                        <Card className="hover:shadow-md hover:scale-[1.02] transition-all duration-200 cursor-pointer border-l-4 border-l-blue-500">
                             <CardContent className="p-4">
                                 <div className="flex items-center justify-between">
                                     <div>
@@ -173,7 +176,7 @@ export default function DashboardPage() {
                     </Link>
 
                     <Link href="/dashboard/goals">
-                        <Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-purple-500">
+                        <Card className="hover:shadow-md hover:scale-[1.02] transition-all duration-200 cursor-pointer border-l-4 border-l-purple-500">
                             <CardContent className="p-4">
                                 <div className="flex items-center justify-between">
                                     <div>
@@ -189,7 +192,7 @@ export default function DashboardPage() {
                     </Link>
 
                     <Link href="/dashboard/journal">
-                        <Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-orange-500">
+                        <Card className="hover:shadow-md hover:scale-[1.02] transition-all duration-200 cursor-pointer border-l-4 border-l-orange-500">
                             <CardContent className="p-4">
                                 <div className="flex items-center justify-between">
                                     <div>
@@ -233,7 +236,7 @@ export default function DashboardPage() {
                                             <div
                                                 key={habit.id}
                                                 className={`
-                                                    flex items-center gap-3 p-3 rounded-lg border transition-colors cursor-pointer
+                                                    flex items-center gap-3 p-3 rounded-lg border transition-all duration-200 cursor-pointer
                                                     ${isCompleted
                                                         ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
                                                         : 'hover:bg-gray-50 dark:hover:bg-gray-800 border-gray-200 dark:border-gray-700'

@@ -54,38 +54,42 @@ export function calculateStreak(completions: HabitCompletion[]): number {
 
 /**
  * Calculate the longest streak from all completion records
+ * Deduplicates same-day completions before counting
  */
 export function calculateLongestStreak(completions: HabitCompletion[]): number {
     if (!completions || completions.length === 0) return 0
 
-    const sortedCompletions = [...completions]
+    // Filter completed and deduplicate by date string
+    const completedDates = [...completions]
         .filter((c) => c.status === 'completed')
-        .sort((a, b) => new Date(a.completionDate).getTime() - new Date(b.completionDate).getTime())
+        .map((c) => {
+            const date = startOfDay(new Date(c.completionDate))
+            return date.toISOString().split('T')[0]
+        })
 
-    if (sortedCompletions.length === 0) return 0
+    // Get unique dates and sort them
+    const uniqueDates = [...new Set(completedDates)].sort()
 
-    let longestStreak = 0
+    if (uniqueDates.length === 0) return 0
+
+    let longestStreak = 1
     let currentStreak = 1
-    let previousDate = startOfDay(new Date(sortedCompletions[0].completionDate))
 
-    for (let i = 1; i < sortedCompletions.length; i++) {
-        const currentDate = startOfDay(new Date(sortedCompletions[i].completionDate))
-        const daysBetween = differenceInDays(currentDate, previousDate)
+    for (let i = 1; i < uniqueDates.length; i++) {
+        const prevDate = new Date(uniqueDates[i - 1] + 'T00:00:00')
+        const currDate = new Date(uniqueDates[i] + 'T00:00:00')
+        const daysBetween = differenceInDays(currDate, prevDate)
 
         if (daysBetween === 1) {
             // Consecutive day
             currentStreak++
-        } else {
-            // Gap found, save current streak if it's the longest
             longestStreak = Math.max(longestStreak, currentStreak)
+        } else if (daysBetween > 1) {
+            // Gap found, reset streak
             currentStreak = 1
         }
-
-        previousDate = currentDate
+        // If daysBetween === 0, same day (shouldn't happen after dedup, but safe)
     }
-
-    // Check final streak
-    longestStreak = Math.max(longestStreak, currentStreak)
 
     return longestStreak
 }

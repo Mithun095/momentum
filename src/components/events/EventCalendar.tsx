@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import React, { useState, useMemo, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
@@ -24,7 +24,7 @@ interface EventCalendarProps {
     onEventClick: (event: CalendarEvent) => void
 }
 
-export function EventCalendar({ events, onDateClick, onEventClick }: EventCalendarProps) {
+export const EventCalendar = React.memo(function EventCalendar({ events, onDateClick, onEventClick }: EventCalendarProps) {
     const [currentMonth, setCurrentMonth] = useState(new Date())
 
     const days = useMemo(() => {
@@ -48,9 +48,9 @@ export function EventCalendar({ events, onDateClick, onEventClick }: EventCalend
         return map
     }, [events])
 
-    const goToPreviousMonth = () => setCurrentMonth(subMonths(currentMonth, 1))
-    const goToNextMonth = () => setCurrentMonth(addMonths(currentMonth, 1))
-    const goToToday = () => setCurrentMonth(new Date())
+    const goToPreviousMonth = useCallback(() => setCurrentMonth(prev => subMonths(prev, 1)), [])
+    const goToNextMonth = useCallback(() => setCurrentMonth(prev => addMonths(prev, 1)), [])
+    const goToToday = useCallback(() => setCurrentMonth(new Date()), [])
 
     const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
@@ -151,4 +151,4 @@ export function EventCalendar({ events, onDateClick, onEventClick }: EventCalend
             </CardContent>
         </Card>
     )
-}
+})

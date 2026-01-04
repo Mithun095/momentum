@@ -177,13 +177,34 @@ export const habitRouter = createTRPCRouter({
             include: {
                 completions: {
                     orderBy: { completionDate: 'desc' },
-                    take: 30 // Get last 30 completions to calculate current streak
+                    // Remove take limit to ensure correct streak calculation for long-term habits
+                    // take: 60  <-- This was causing the bug for streaks > 60 days
+
                 }
             }
         })
 
+        // Batch query for total completions (instead of N+1 queries)
+        const habitIds = habits.map(h => h.id)
+        const totalCompletionsCounts = await ctx.db.habitCompletion.groupBy({
+            by: ['habitId'],
+            where: {
+                habitId: { in: habitIds },
+                status: 'completed'
+            },
+            _count: { id: true }
+        })
+
+        // Create a map for quick lookup
+        const completionsMap = new Map<string, number>()
+        for (const item of totalCompletionsCounts) {
+            completionsMap.set(item.habitId, item._count.id)
+        }
+
         const today = new Date()
         today.setHours(0, 0, 0, 0)
+        const todayStr = today.toISOString().split('T')[0]
+
         const yesterday = new Date(today)
         yesterday.setDate(yesterday.getDate() - 1)
 
@@ -194,13 +215,15 @@ export const habitRouter = createTRPCRouter({
             let currentCheckDate = new Date(today)
 
             // Calculate streak
-            // Check if completed today or yesterday to equal "active streak"
+            // IMPORTANT: Only count completions with status 'completed' (not 'skipped' or 'failed')
             const completionsSet = new Set(
-                habit.completions.map(c => c.completionDate.toISOString().split('T')[0])
+                habit.completions
+                    .filter(c => c.status === 'completed')
+                    .map(c => c.completionDate.toISOString().split('T')[0])
             )
 
             // If not completed today, start check from yesterday
-            if (!completionsSet.has(today.toISOString().split('T')[0])) {
+            if (!completionsSet.has(todayStr)) {
                 currentCheckDate = yesterday
             }
 
@@ -214,14 +237,9 @@ export const habitRouter = createTRPCRouter({
                 }
             }
 
-            // Get total completions count (aggregate query would be improved, but this roughly works with included data or separate count)
-            const total = await ctx.db.habitCompletion.count({
-                where: { habitId: habit.id, status: 'completed' }
-            })
-
             stats[habit.id] = {
                 streak,
-                totalCompletions: total
+                totalCompletions: completionsMap.get(habit.id) || 0
             }
         }
 

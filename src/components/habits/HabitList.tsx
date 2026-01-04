@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import React, { useState, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -30,7 +30,7 @@ interface HabitListProps {
     isLoading: boolean
 }
 
-export function HabitList({ habits, isLoading }: HabitListProps) {
+export const HabitList = React.memo(function HabitList({ habits, isLoading }: HabitListProps) {
     const [editingHabit, setEditingHabit] = useState<Habit | null>(null)
     const { toast } = useToast()
     const utils = api.useUtils()
@@ -70,20 +70,74 @@ export function HabitList({ habits, isLoading }: HabitListProps) {
     }, [completions])
 
     const markComplete = api.habit.markComplete.useMutation({
+        onMutate: async (newHabit) => {
+            // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+            await utils.habit.getAllCompletions.cancel()
+            await utils.habit.getStats.cancel()
+
+            // Snapshot the previous value
+            const previousCompletions = utils.habit.getAllCompletions.getData({ startDate, endDate })
+            const previousStats = utils.habit.getStats.getData()
+
+            // Optimistically update to the new value
+            if (previousCompletions) {
+                utils.habit.getAllCompletions.setData({ startDate, endDate }, (old) => {
+                    if (!old) return []
+                    return [
+                        ...old,
+                        {
+                            id: 'temp-id-' + Math.random(),
+                            habitId: newHabit.habitId,
+                            completionDate: newHabit.date,
+                            status: newHabit.status,
+                            notes: newHabit.notes || null,
+                            createdAt: new Date(),
+                        },
+                    ]
+                })
+            }
+
+            // Optimistically update stats
+            if (previousStats && newHabit.status === 'completed') {
+                utils.habit.getStats.setData(undefined, (old) => {
+                    if (!old) return {}
+                    const habitStats = old[newHabit.habitId] || { streak: 0, totalCompletions: 0 }
+                    return {
+                        ...old,
+                        [newHabit.habitId]: {
+                            streak: habitStats.streak + 1,
+                            totalCompletions: habitStats.totalCompletions + 1,
+                        },
+                    }
+                })
+            }
+
+            return { previousCompletions, previousStats }
+        },
+        onError: (err, newHabit, context) => {
+            // If the mutation fails, use the context returned from onMutate to roll back
+            if (context?.previousCompletions) {
+                utils.habit.getAllCompletions.setData({ startDate, endDate }, context.previousCompletions)
+            }
+            if (context?.previousStats) {
+                utils.habit.getStats.setData(undefined, context.previousStats)
+            }
+            toast({
+                title: 'Error',
+                description: err.message || 'Failed to mark habit as complete',
+                variant: 'destructive',
+            })
+        },
+        onSettled: () => {
+            // Always refetch after error or success:
+            void utils.habit.getAllCompletions.invalidate()
+            void utils.habit.getStats.invalidate()
+            void utils.habit.getAll.invalidate()
+        },
         onSuccess: () => {
             toast({
                 title: 'Habit completed!',
                 description: 'Great job! Keep up the streak! 🔥',
-            })
-            void utils.habit.getAll.invalidate()
-            void utils.habit.getAllCompletions.invalidate()
-            void utils.habit.getStats.invalidate()
-        },
-        onError: (error) => {
-            toast({
-                title: 'Error',
-                description: error.message || 'Failed to mark habit as complete',
-                variant: 'destructive',
             })
         },
     })
@@ -139,7 +193,7 @@ export function HabitList({ habits, isLoading }: HabitListProps) {
                     const isCompleted = completedToday.has(habit.id)
 
                     return (
-                        <Card key={habit.id} className={`group hover:shadow-lg transition-shadow ${isCompleted ? 'opacity-75' : ''}`}>
+                        <Card key={habit.id} className={`group hover:shadow-lg transition-all duration-200 ${isCompleted ? 'opacity-75' : ''}`}>
                             <CardHeader>
                                 <div className="flex items-start justify-between">
                                     <div className="flex items-center gap-2">
@@ -224,5 +278,5 @@ export function HabitList({ habits, isLoading }: HabitListProps) {
             )}
         </>
     )
-}
+})
 
