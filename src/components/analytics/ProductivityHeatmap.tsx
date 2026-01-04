@@ -17,11 +17,11 @@ interface ProductivityHeatmapProps {
     data: HeatmapData[]
 }
 
-const getIntensityClass = (score: number): string => {
-    if (score === 0) return 'bg-gray-100 dark:bg-[#161b22]' // Empty
-    if (score <= 2) return 'bg-emerald-200 dark:bg-emerald-900/30' // Level 1
-    if (score <= 5) return 'bg-emerald-300 dark:bg-emerald-800/50' // Level 2
-    if (score <= 8) return 'bg-emerald-400 dark:bg-emerald-600/70' // Level 3
+const getIntensityClass = (count: number): string => {
+    if (count === 0) return 'bg-gray-100 dark:bg-[#161b22]' // Empty
+    if (count <= 2) return 'bg-emerald-200 dark:bg-emerald-900/30' // Level 1
+    if (count <= 4) return 'bg-emerald-300 dark:bg-emerald-800/50' // Level 2
+    if (count <= 6) return 'bg-emerald-400 dark:bg-emerald-600/70' // Level 3
     return 'bg-emerald-500 dark:bg-emerald-500' // Level 4
 }
 
@@ -163,7 +163,7 @@ export function ProductivityHeatmap({ data }: ProductivityHeatmapProps) {
                                                 className={cn(
                                                     CELL_SIZE_CLASS,
                                                     "rounded-sm transition-all duration-300",
-                                                    day ? getIntensityClass(day.score) : "bg-transparent",
+                                                    day ? getIntensityClass(day.habits + day.tasks + day.journals) : "bg-transparent",
                                                     "hover:scale-125 hover:z-10 relative cursor-pointer"
                                                 )}
                                                 onMouseEnter={(e) => {
@@ -218,9 +218,9 @@ export function ProductivityHeatmap({ data }: ProductivityHeatmapProps) {
                                 </span>
                                 <span className={cn(
                                     "px-1.5 py-0.5 rounded text-[10px] font-bold",
-                                    hoveredDay.data.score > 7 ? "bg-emerald-500/20 text-emerald-400" : "bg-gray-700 text-gray-400"
+                                    (hoveredDay.data.habits + hoveredDay.data.tasks + hoveredDay.data.journals) >= 5 ? "bg-emerald-500/20 text-emerald-400" : "bg-gray-700 text-gray-400"
                                 )}>
-                                    {hoveredDay.data.score} pts
+                                    {hoveredDay.data.habits + hoveredDay.data.tasks + hoveredDay.data.journals} activities
                                 </span>
                             </div>
 
