@@ -104,7 +104,12 @@ export default function SignUpPage() {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
-            <div className="w-full max-w-md">
+            <div className="w-full max-w-md relative">
+                <div className="absolute top-0 left-0 -mt-16">
+                    <Link href="/" className="text-sm text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white flex items-center gap-2 transition-colors">
+                        ← Back to Home
+                    </Link>
+                </div>
                 {/* Logo and Title */}
                 <div className="text-center mb-8">
                     <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">

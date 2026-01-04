@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Progress } from '@/components/ui/progress'
-import { Navbar } from '@/components/layout/Navbar'
 import { AIFloatingButton } from '@/components/ai/AIFloatingButton'
 import { EventCalendar } from '@/components/events/EventCalendar'
 import { CreateEventModal } from '@/components/events/CreateEventModal'
@@ -128,7 +127,6 @@ export default function DashboardPage() {
     if (status === 'loading') {
         return (
             <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-                <Navbar />
                 <div className="max-w-7xl mx-auto px-4 py-8">
                     <Skeleton className="h-12 w-64 mb-8" />
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -147,7 +145,6 @@ export default function DashboardPage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-50 to-indigo-50/30 dark:from-gray-950 dark:via-gray-950 dark:to-indigo-950/20">
-            <Navbar />
 
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Greeting */}

@@ -11,6 +11,9 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Momentum - Life Management Platform",
   description: "Track your habits, journal your thoughts, plan your days, and achieve your goals with AI assistance.",
+  icons: {
+    icon: "/logo.png",
+  },
 };
 
 export default function RootLayout({

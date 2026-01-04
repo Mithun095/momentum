@@ -1,6 +1,8 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { cn } from '@/lib/utils'
 
 interface HeatmapData {
     date: string
@@ -15,157 +17,233 @@ interface ProductivityHeatmapProps {
 }
 
 const getIntensityClass = (score: number): string => {
-    if (score === 0) return 'bg-gray-100 dark:bg-[#161b22]' // Empty: Light gray / Dark GitHub-like gray
-    if (score <= 2) return 'bg-[#9be9a8] dark:bg-[#0e4429]' // Level 1
-    if (score <= 5) return 'bg-[#40c463] dark:bg-[#006d32]' // Level 2
-    if (score <= 8) return 'bg-[#30a14e] dark:bg-[#26a641]' // Level 3
-    return 'bg-[#216e39] dark:bg-[#39d353]' // Level 4
+    if (score === 0) return 'bg-gray-100 dark:bg-[#161b22]' // Empty
+    if (score <= 2) return 'bg-emerald-200 dark:bg-emerald-900/30' // Level 1
+    if (score <= 5) return 'bg-emerald-300 dark:bg-emerald-800/50' // Level 2
+    if (score <= 8) return 'bg-emerald-400 dark:bg-emerald-600/70' // Level 3
+    return 'bg-emerald-500 dark:bg-emerald-500' // Level 4
 }
 
 export function ProductivityHeatmap({ data }: ProductivityHeatmapProps) {
-    const { weeks, months } = useMemo(() => {
-        if (data.length === 0) return { weeks: [], months: [] }
+    const [hoveredDay, setHoveredDay] = useState<{ data: HeatmapData, x: number, y: number } | null>(null)
 
-        // Group data by week
-        const dataMap = new Map(data.map(d => [d.date, d]))
+    // Configuration for rendering
+    // cell size: 14px (w-3.5)
+    // gap: 6px (gap-1.5)
+    // total col width: 20px
+    const CELL_SIZE_CLASS = "w-3.5 h-3.5"
+    const COL_WIDTH = 20;
+
+    const { weeks, monthLabels } = useMemo(() => {
+        if (!data || data.length === 0) return { weeks: [], monthLabels: [] }
+
+        // Sort data chronologically
+        const sortedData = [...data].sort((a, b) => a.date.localeCompare(b.date))
+
+        // Ensure we cover the full range from first to last date (filling gaps if necessary)
+        const startDate = new Date(sortedData[0].date)
+        const endDate = new Date(sortedData[sortedData.length - 1].date)
+
+        // Align start date to the previous Sunday
+        const startDayParams = startDate.getDay()
+        const alignedStartDate = new Date(startDate)
+        alignedStartDate.setDate(startDate.getDate() - startDayParams)
+
+        // Generate full array of days
+        const allDays: (HeatmapData | null)[] = []
+        const dateMap = new Map(sortedData.map(d => [d.date, d]))
+
+        const currentDate = new Date(alignedStartDate)
+        while (currentDate <= endDate || currentDate.getDay() !== 0) {
+            const dateStr = currentDate.toISOString().split('T')[0]
+            allDays.push(dateMap.get(dateStr) || { date: dateStr, habits: 0, tasks: 0, journals: 0, score: 0 })
+            currentDate.setDate(currentDate.getDate() + 1)
+            if (currentDate.getFullYear() > endDate.getFullYear() + 1) break;
+        }
+
+        // Chunk into weeks
         const weeks: (HeatmapData | null)[][] = []
         let currentWeek: (HeatmapData | null)[] = []
-        const monthLabels: { label: string; position: number }[] = []
-        let lastMonth = ''
 
-        // Start from the first date and go to today
-        const sortedDates = [...data].sort((a, b) => a.date.localeCompare(b.date))
-        if (sortedDates.length === 0) return { weeks: [], months: [] }
-
-        const startDate = new Date(sortedDates[0].date)
-        const endDate = new Date(sortedDates[sortedDates.length - 1].date)
-
-        // Adjust start to Sunday
-        const adjustedStart = new Date(startDate)
-        adjustedStart.setDate(adjustedStart.getDate() - adjustedStart.getDay())
-
-        let currentDate = new Date(adjustedStart)
-
-        while (currentDate <= endDate) {
-            const dateStr = currentDate.toISOString().split('T')[0]
-            const dayData = dataMap.get(dateStr) || null
-
-            // Track month changes for labels
-            const month = currentDate.toLocaleDateString('en-US', { month: 'short' })
-            if (month !== lastMonth) {
-                monthLabels.push({ label: month, position: weeks.length })
-                lastMonth = month
-            }
-
-            currentWeek.push(dayData)
-
-            if (currentWeek.length === 7) {
+        allDays.forEach((day, index) => {
+            currentWeek.push(day)
+            if ((index + 1) % 7 === 0) {
                 weeks.push(currentWeek)
                 currentWeek = []
             }
+        })
 
-            currentDate.setDate(currentDate.getDate() + 1)
-        }
+        // Month labels
+        const monthLabels: { label: string, index: number }[] = []
+        let lastMonth = ''
 
-        // Add remaining days
-        if (currentWeek.length > 0) {
-            while (currentWeek.length < 7) {
-                currentWeek.push(null)
+        weeks.forEach((week, index) => {
+            if (!week[0]) return
+            // Identify the month based on the first day of the week, or the first day of the month if it falls in this week
+            // Standard approach: if a week contains the 1st of a month, label it above that week column
+            const hasFirstOfMonth = week.some(d => d && new Date(d.date).getDate() === 1)
+            const firstDayOfWeek = new Date(week[0].date)
+            const monthName = firstDayOfWeek.toLocaleString('default', { month: 'short' })
+
+            // Logic: Place label if it's the 1st of month OR if it's the very first column
+            if (hasFirstOfMonth || (index === 0)) {
+                // But don't duplicate if we just added it (e.g. 1st appears but we already labeled prev week due to boundary)
+                // Actually, simplify: just label when month changes based on `hasFirstOfMonth`
+
+                // If the week contains the 1st, we DEFINITELY label it with the new month name
+                const dayFirst = week.find(d => d && new Date(d.date).getDate() === 1)
+                if (dayFirst) {
+                    const mName = new Date(dayFirst.date).toLocaleString('default', { month: 'short' })
+                    monthLabels.push({ label: mName, index: index })
+                } else if (index === 0) {
+                    monthLabels.push({ label: monthName, index: 0 })
+                }
             }
-            weeks.push(currentWeek)
-        }
+        })
 
-        return { weeks, months: monthLabels }
+        return { weeks, monthLabels }
     }, [data])
 
-    if (data.length === 0) {
+    if (!data || data.length === 0) {
         return (
-            <div className="flex items-center justify-center h-48 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                <div className="text-center text-gray-500 dark:text-gray-400">
-                    <p className="text-4xl mb-2">📅</p>
-                    <p>No activity data yet</p>
-                    <p className="text-sm">Complete habits, tasks, or write journals</p>
-                </div>
+            <div className="flex flex-col items-center justify-center h-48 bg-gray-50/50 dark:bg-gray-800/50 rounded-xl border border-dashed border-gray-200 dark:border-gray-700">
+                <div className="text-4xl mb-3 opacity-50">📅</div>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">No activity recorded yet</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Consistency starts today!</p>
             </div>
         )
     }
 
-    const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    const dayLabels = ['Sun', '', 'Tue', '', 'Thu', '', 'Sat']
 
     return (
-        <div className="w-full overflow-x-auto pb-2">
-            <div className="min-w-fit mx-auto pr-4">
-                {/* Month labels */}
-                <div className="flex mb-2 ml-[38px]">
-                    {months.map((m, i) => {
-                        // Calculate margin based on gap-1 (0.25rem = 4px) + w-3 (12px) = 16px per col
-                        // Previous implementation used exact pixels, let's use a rough multiplier
-                        const diff = m.position - (months[i - 1]?.position || 0)
-                        const margin = i === 0 ? 0 : (diff * 16) - 20 // Subtract approximate width of text to align better
+        <div className="w-full relative group">
+            <div className="flex flex-col gap-2">
+                {/* Scroll Container */}
+                <div className="overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide">
+                    <div className="min-w-max">
+                        {/* Month Labels */}
+                        <div className="flex text-xs text-gray-400 dark:text-gray-500 mb-2 h-4 relative">
+                            {/* Offset for day labels column */}
+                            <div className="w-8 shrink-0 mr-1" />
 
-                        // actually, simplified approach: just render absolute or use grid?
-                        // Sticking to margin for now but careful with the math.
-                        // 1 col = 16px. 
-                        const exactMargin = i === 0 ? 0 : (diff * 16)
-
-                        return (
-                            <div
-                                key={`${m.label}-${i}`}
-                                className="text-xs font-medium text-gray-500 dark:text-gray-400 text-left"
-                                style={{
-                                    marginLeft: i === 0 ? 0 : `${Math.max(0, exactMargin - 25)}px`,
-                                    minWidth: '30px'
-                                }}
-                            >
-                                {m.label}
-                            </div>
-                        )
-                    })}
-                </div>
-
-                <div className="flex">
-                    {/* Day labels */}
-                    <div className="flex flex-col mr-3 gap-[3px] py-[1px]">
-                        {dayLabels.map((day, i) => (
-                            <div key={day} className="h-3 text-[10px] text-gray-400 dark:text-gray-500 flex items-center leading-none">
-                                {i % 2 === 1 ? day : ''}
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Grid */}
-                    <div className="flex gap-1">
-                        {weeks.map((week, weekIndex) => (
-                            <div key={`week-${weekIndex}`} className="flex flex-col gap-1">
-                                {week.map((day, dayIndex) => (
+                            {/* Labels Container - Position absolute relative to the weeks container would be ideal, 
+                               but here we mimic with relative + absolute children */}
+                            <div className="relative flex-1">
+                                {monthLabels.map((m, i) => (
                                     <div
-                                        key={`${weekIndex}-${dayIndex}`}
-                                        className={`w-3 h-3 rounded-[2px] transition-all duration-200 ${day ? getIntensityClass(day.score) : 'bg-transparent'} hover:opacity-80 hover:scale-110 cursor-help`}
-                                        title={
-                                            day
-                                                ? `${day.date}\nScore: ${day.score}\n${day.habits} habits, ${day.tasks} tasks, ${day.journals} journals`
-                                                : ''
-                                        }
-                                    />
+                                        key={`${m.label}-${i}`}
+                                        className="absolute font-medium"
+                                        style={{ left: `${m.index * COL_WIDTH}px` }}
+                                    >
+                                        {m.label}
+                                    </div>
                                 ))}
                             </div>
-                        ))}
+                        </div>
+
+                        <div className="flex items-start gap-1">
+                            {/* Day Labels Column */}
+                            <div className="flex flex-col gap-[6px] mt-[1px] w-8 shrink-0">
+                                {dayLabels.map((day, i) => (
+                                    <div key={i} className={`h-3.5 text-[10px] font-medium text-gray-400 dark:text-gray-500 flex items-center leading-none ${!day ? 'invisible' : ''}`}>
+                                        {day || '-'}
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Heatmap Grid */}
+                            <div className="flex gap-1.5">
+                                {weeks.map((week, wIndex) => (
+                                    <div key={wIndex} className="flex flex-col gap-1.5">
+                                        {week.map((day, dIndex) => (
+                                            <div
+                                                key={`${wIndex}-${dIndex}`}
+                                                className={cn(
+                                                    CELL_SIZE_CLASS,
+                                                    "rounded-sm transition-all duration-300",
+                                                    day ? getIntensityClass(day.score) : "bg-transparent",
+                                                    "hover:scale-125 hover:z-10 relative cursor-pointer"
+                                                )}
+                                                onMouseEnter={(e) => {
+                                                    if (day) {
+                                                        const rect = e.currentTarget.getBoundingClientRect()
+                                                        setHoveredDay({ data: day, x: rect.left + rect.width / 2, y: rect.top })
+                                                    }
+                                                }}
+                                                onMouseLeave={() => setHoveredDay(null)}
+                                            />
+                                        ))}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 {/* Legend */}
-                <div className="flex items-center justify-end gap-2 mt-6 text-xs text-gray-500 dark:text-gray-400">
-                    <span>Less</span>
-                    <div className="flex gap-1">
-                        <div className="w-3 h-3 rounded-[2px] bg-gray-100 dark:bg-[#161b22] border border-gray-200 dark:border-transparent" />
-                        <div className="w-3 h-3 rounded-[2px] bg-[#9be9a8] dark:bg-[#0e4429]" />
-                        <div className="w-3 h-3 rounded-[2px] bg-[#40c463] dark:bg-[#006d32]" />
-                        <div className="w-3 h-3 rounded-[2px] bg-[#30a14e] dark:bg-[#26a641]" />
-                        <div className="w-3 h-3 rounded-[2px] bg-[#216e39] dark:bg-[#39d353]" />
+                <div className="flex items-center justify-end gap-3 mt-4">
+                    <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">Contribution Level</span>
+                    <div className="flex gap-1.5">
+                        <div className={cn(CELL_SIZE_CLASS, "rounded-sm bg-gray-100 dark:bg-[#161b22]")} />
+                        <div className={cn(CELL_SIZE_CLASS, "rounded-sm bg-emerald-200 dark:bg-emerald-900/30")} />
+                        <div className={cn(CELL_SIZE_CLASS, "rounded-sm bg-emerald-300 dark:bg-emerald-800/50")} />
+                        <div className={cn(CELL_SIZE_CLASS, "rounded-sm bg-emerald-400 dark:bg-emerald-600/70")} />
+                        <div className={cn(CELL_SIZE_CLASS, "rounded-sm bg-emerald-500 dark:bg-emerald-500")} />
                     </div>
-                    <span>More</span>
                 </div>
             </div>
+
+            {/* Floating Tooltip Portal */}
+            <AnimatePresence>
+                {hoveredDay && (
+                    <div className="fixed inset-0 pointer-events-none z-50">
+                        <motion.div
+                            initial={{ opacity: 0, y: 5, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 2, scale: 0.95 }}
+                            transition={{ duration: 0.1 }}
+                            style={{
+                                position: 'absolute',
+                                left: hoveredDay.x,
+                                top: hoveredDay.y - 10,
+                                transform: 'translate(-50%, -100%)'
+                            }}
+                            className="bg-gray-900/95 backdrop-blur-sm dark:bg-gray-800/95 text-white text-xs rounded-xl py-3 px-4 shadow-xl border border-gray-700/50 min-w-[160px]"
+                        >
+                            <div className="flex items-center justify-between mb-2 pb-2 border-b border-gray-700/50">
+                                <span className="font-semibold text-gray-200">
+                                    {new Date(hoveredDay.data.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                                </span>
+                                <span className={cn(
+                                    "px-1.5 py-0.5 rounded text-[10px] font-bold",
+                                    hoveredDay.data.score > 7 ? "bg-emerald-500/20 text-emerald-400" : "bg-gray-700 text-gray-400"
+                                )}>
+                                    {hoveredDay.data.score} pts
+                                </span>
+                            </div>
+
+                            <div className="grid grid-cols-3 gap-2 text-center">
+                                <div className="flex flex-col bg-gray-800/50 rounded p-1">
+                                    <span className="text-[10px] text-gray-500 uppercase">Habits</span>
+                                    <span className="font-mono font-medium text-emerald-400">{hoveredDay.data.habits}</span>
+                                </div>
+                                <div className="flex flex-col bg-gray-800/50 rounded p-1">
+                                    <span className="text-[10px] text-gray-500 uppercase">Tasks</span>
+                                    <span className="font-mono font-medium text-blue-400">{hoveredDay.data.tasks}</span>
+                                </div>
+                                <div className="flex flex-col bg-gray-800/50 rounded p-1">
+                                    <span className="text-[10px] text-gray-500 uppercase">Journal</span>
+                                    <span className="font-mono font-medium text-purple-400">{hoveredDay.data.journals}</span>
+                                </div>
+                            </div>
+
+                            {/* Arrow */}
+                            <div className="absolute left-1/2 -bottom-2 transform -translate-x-1/2 border-8 border-transparent border-t-gray-900/95 dark:border-t-gray-800/95" />
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     )
 }
