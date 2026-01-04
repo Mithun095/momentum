@@ -25,7 +25,7 @@ export default function AnalyticsPage() {
 
     // Data fetching
     const { data: moodStats, isLoading: moodLoading } = api.analytics.getMoodStats.useQuery({ days: 30 }, { enabled: !!session })
-    const { data: heatmapData, isLoading: heatmapLoading } = api.analytics.getProductivityHeatmap.useQuery({ months: 3 }, { enabled: !!session })
+    const { data: heatmapData, isLoading: heatmapLoading } = api.analytics.getProductivityHeatmap.useQuery({ months: 6 }, { enabled: !!session })
     const { data: weeklySummary, isLoading: weeklyLoading } = api.analytics.getWeeklySummary.useQuery(undefined, { enabled: !!session })
     const { data: monthlySummary, isLoading: monthlyLoading } = api.analytics.getMonthlySummary.useQuery(undefined, { enabled: !!session })
     const { data: overallStats, isLoading: overallLoading } = api.analytics.getOverallStats.useQuery(undefined, { enabled: !!session })
