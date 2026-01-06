@@ -1,0 +1,149 @@
+time="2026-01-06T06:52:10+05:30" level=warning msg="/home/mithun/Desktop/projects/momentum/docker-compose.prod.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+#1 [internal] load local bake definitions
+#1 reading from stdin 519B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 2.36kB done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/node:24-slim
+#3 ...
+
+#4 [auth] library/node:pull token for registry-1.docker.io
+#4 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/node:24-slim
+#3 DONE 2.7s
+
+#5 [internal] load .dockerignore
+#5 transferring context: 173B done
+#5 DONE 0.0s
+
+#6 [base 1/1] FROM docker.io/library/node:24-slim@sha256:b83af04d005d8e3716f542469a28ad2947ba382f6b4a76ddca0827a21446a540
+#6 resolve docker.io/library/node:24-slim@sha256:b83af04d005d8e3716f542469a28ad2947ba382f6b4a76ddca0827a21446a540 0.0s done
+#6 DONE 0.0s
+
+#7 [builder 1/5] WORKDIR /app
+#7 CACHED
+
+#8 [runner 2/8] RUN addgroup --system --gid 1001 nodejs
+#8 CACHED
+
+#9 [runner 3/8] RUN adduser --system --uid 1001 nextjs
+#9 CACHED
+
+#10 [internal] load build context
+#10 transferring context: 12.90kB done
+#10 DONE 0.0s
+
+#11 [deps 4/5] COPY prisma ./prisma
+#11 CACHED
+
+#12 [deps 5/5] RUN   if [ -f yarn.lock ]; then yarn --frozen-lockfile;   elif [ -f package-lock.json ]; then npm install;   elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm i --frozen-lockfile;   else echo "Lockfile not found." && exit 1;   fi
+#12 CACHED
+
+#13 [deps 1/5] RUN apt-get update && apt-get install -y python3 make g++ openssl pkg-config
+#13 CACHED
+
+#14 [deps 2/5] WORKDIR /app
+#14 CACHED
+
+#15 [deps 3/5] COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
+#15 CACHED
+
+#16 [builder 2/5] COPY --from=deps /app/node_modules ./node_modules
+#16 CACHED
+
+#17 [builder 3/5] COPY . .
+#17 DONE 0.2s
+
+#18 [builder 4/5] RUN npx prisma generate
+#18 1.252 Loaded Prisma config from prisma.config.ts.
+#18 1.252 
+#18 1.282 prisma:warn Prisma failed to detect the libssl/openssl version to use, and may not work as expected. Defaulting to "openssl-1.1.x".
+#18 1.282 Please manually install OpenSSL via `apt-get update -y && apt-get install -y openssl` and try installing Prisma again. If you're running Prisma on Docker, add this command to your Dockerfile, or switch to an image that already has OpenSSL installed.
+#18 1.284 prisma:warn Prisma failed to detect the libssl/openssl version to use, and may not work as expected. Defaulting to "openssl-1.1.x".
+#18 1.284 Please manually install OpenSSL via `apt-get update -y && apt-get install -y openssl` and try installing Prisma again. If you're running Prisma on Docker, add this command to your Dockerfile, or switch to an image that already has OpenSSL installed.
+#18 3.306 Prisma schema loaded from prisma/schema.prisma.
+#18 3.561 
+#18 3.561 ✔ Generated Prisma Client (v7.2.0) to ./node_modules/@prisma/client in 165ms
+#18 3.561 
+#18 3.561 Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+#18 3.561 
+#18 3.561 Tip: Interested in query caching in just a few lines of code? Try Accelerate today! https://pris.ly/tip-3-accelerate
+#18 3.561 
+#18 3.576 npm notice
+#18 3.576 npm notice New minor version of npm available! 11.6.2 -> 11.7.0
+#18 3.576 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.7.0
+#18 3.576 npm notice To update run: npm install -g npm@11.7.0
+#18 3.576 npm notice
+#18 DONE 3.6s
+
+#19 [builder 5/5] RUN   if [ -f yarn.lock ]; then yarn run build;   elif [ -f package-lock.json ]; then DATABASE_URL="postgresql://dummy" DIRECT_URL="postgresql://dummy" NEXTAUTH_SECRET="dummy" npm run build;   elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm run build;   else echo "Lockfile not found." && exit 1;   fi
+#19 0.260 
+#19 0.260 > momentum@1.0.0 build
+#19 0.260 > next build
+#19 0.260 
+#19 0.718 ▲ Next.js 16.1.1 (Turbopack)
+#19 0.718 - Experiments (use with caution):
+#19 0.718   · serverActions
+#19 0.719 
+#19 0.737   Creating an optimized production build ...
+#19 9.237 ✓ Compiled successfully in 8.3s
+#19 9.243   Running TypeScript ...
+#19 16.51 Failed to compile.
+#19 16.51 
+#19 16.51 ./prisma.config.ts:13:5
+#19 16.51 Type error: Object literal may only specify known properties, and 'directUrl' does not exist in type '{ url?: string | undefined; shadowDatabaseUrl?: string | undefined; }'.
+#19 16.51 
+#19 16.51 [0m [90m 11 |[39m   datasource[33m:[39m {
+#19 16.51  [90m 12 |[39m     url[33m:[39m process[33m.[39menv[[32m"DATABASE_URL"[39m][33m,[39m
+#19 16.51 [31m[1m>[22m[39m[90m 13 |[39m     directUrl[33m:[39m process[33m.[39menv[[32m"DIRECT_URL"[39m][33m,[39m
+#19 16.51  [90m    |[39m     [31m[1m^[22m[39m
+#19 16.51  [90m 14 |[39m   }[33m,[39m
+#19 16.51  [90m 15 |[39m })[33m;[39m
+#19 16.51  [90m 16 |[39m[0m
+#19 16.59 Next.js build worker exited with code: 1 and signal: null
+#19 ERROR: process "/bin/sh -c if [ -f yarn.lock ]; then yarn run build;   elif [ -f package-lock.json ]; then DATABASE_URL=\"postgresql://dummy\" DIRECT_URL=\"postgresql://dummy\" NEXTAUTH_SECRET=\"dummy\" npm run build;   elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm run build;   else echo \"Lockfile not found.\" && exit 1;   fi" did not complete successfully: exit code: 1
+------
+ > [builder 5/5] RUN   if [ -f yarn.lock ]; then yarn run build;   elif [ -f package-lock.json ]; then DATABASE_URL="postgresql://dummy" DIRECT_URL="postgresql://dummy" NEXTAUTH_SECRET="dummy" npm run build;   elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm run build;   else echo "Lockfile not found." && exit 1;   fi:
+16.51 Type error: Object literal may only specify known properties, and 'directUrl' does not exist in type '{ url?: string | undefined; shadowDatabaseUrl?: string | undefined; }'.
+16.51 
+16.51 [0m [90m 11 |[39m   datasource[33m:[39m {
+16.51  [90m 12 |[39m     url[33m:[39m process[33m.[39menv[[32m"DATABASE_URL"[39m][33m,[39m
+16.51 [31m[1m>[22m[39m[90m 13 |[39m     directUrl[33m:[39m process[33m.[39menv[[32m"DIRECT_URL"[39m][33m,[39m
+16.51  [90m    |[39m     [31m[1m^[22m[39m
+16.51  [90m 14 |[39m   }[33m,[39m
+16.51  [90m 15 |[39m })[33m;[39m
+16.51  [90m 16 |[39m[0m
+16.59 Next.js build worker exited with code: 1 and signal: null
+------
+Dockerfile:35
+
+--------------------
+
+  34 |     
+
+  35 | >>> RUN \
+
+  36 | >>>   if [ -f yarn.lock ]; then yarn run build; \
+
+  37 | >>>   elif [ -f package-lock.json ]; then DATABASE_URL="postgresql://dummy" DIRECT_URL="postgresql://dummy" NEXTAUTH_SECRET="dummy" npm run build; \
+
+  38 | >>>   elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm run build; \
+
+  39 | >>>   else echo "Lockfile not found." && exit 1; \
+
+  40 | >>>   fi
+
+  41 |     
+
+--------------------
+
+failed to solve: process "/bin/sh -c if [ -f yarn.lock ]; then yarn run build;   elif [ -f package-lock.json ]; then DATABASE_URL=\"postgresql://dummy\" DIRECT_URL=\"postgresql://dummy\" NEXTAUTH_SECRET=\"dummy\" npm run build;   elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm run build;   else echo \"Lockfile not found.\" && exit 1;   fi" did not complete successfully: exit code: 1
+
+
+
+View build details: docker-desktop://dashboard/build/default/default/v88hpq8s7izkzdgsuxxpmbt5m
+
