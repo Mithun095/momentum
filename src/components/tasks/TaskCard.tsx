@@ -71,8 +71,8 @@ export const TaskCard = React.memo(function TaskCard({ task, onToggleComplete, o
 
     return (
         <Card className={cn(
-            "transition-all duration-200 hover:shadow-md",
-            isCompleted && "opacity-60"
+            "transition-all duration-300 hover:shadow-md border-0 shadow-sm dark:bg-[oklch(0.15_0.025_265)] ring-1 ring-gray-200/60 dark:ring-[oklch(0.25_0.04_265/40%)]",
+            isCompleted && "opacity-60 dark:bg-[oklch(0.13_0.02_265)]"
         )}>
             <CardContent className="p-4">
                 <div className="flex items-start gap-3">

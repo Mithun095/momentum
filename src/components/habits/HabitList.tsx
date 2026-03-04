@@ -39,9 +39,10 @@ interface Habit {
 interface HabitListProps {
     habits?: Habit[]
     isLoading: boolean
+    onCreateClick?: () => void
 }
 
-export const HabitList = React.memo(function HabitList({ habits, isLoading }: HabitListProps) {
+export const HabitList = React.memo(function HabitList({ habits, isLoading, onCreateClick }: HabitListProps) {
     const [editingHabit, setEditingHabit] = useState<Habit | null>(null)
     const { toast } = useToast()
     const utils = api.useUtils()
@@ -284,6 +285,15 @@ export const HabitList = React.memo(function HabitList({ habits, isLoading }: Ha
                     <p className="text-gray-600 dark:text-gray-400 mb-6">
                         Start building better habits by creating your first one!
                     </p>
+                    {onCreateClick && (
+                        <Button
+                            onClick={onCreateClick}
+                            className="bg-gray-800 hover:bg-gray-700 dark:bg-gray-200 dark:hover:bg-gray-300 dark:text-gray-900"
+                        >
+                            <Check className="h-4 w-4 mr-2" />
+                            Add Your First Habit
+                        </Button>
+                    )}
                 </CardContent>
             </Card>
         )

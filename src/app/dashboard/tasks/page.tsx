@@ -46,6 +46,7 @@ export default function TasksPage() {
     const [categoryFilter, setCategoryFilter] = useState('all')
     const [createModalOpen, setCreateModalOpen] = useState(false)
     const [editingTask, setEditingTask] = useState<Task | null>(null)
+    const [showPreviousTasks, setShowPreviousTasks] = useState(false)
 
     // Fetch all tasks
     const { data: tasks, isLoading } = api.task.getAll.useQuery({})
@@ -195,10 +196,10 @@ export default function TasksPage() {
         deleteTask.mutate({ id })
     }
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="min-h-screen">
             {/* Top Navigation */}
             {/* Page Header */}
-            <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+            <div className="bg-white/70 dark:bg-[oklch(0.12_0.025_265/70%)] backdrop-blur-xl border-b border-gray-200/60 dark:border-[oklch(0.25_0.04_265/40%)]">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
                         <div className="flex items-center gap-2">
@@ -207,13 +208,16 @@ export default function TasksPage() {
                                     <ArrowLeft className="h-5 w-5" />
                                 </Button>
                             </a>
-                            <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                            <h1
+                                className="text-xl font-semibold text-gray-900 dark:text-gray-100"
+                                style={{ fontFamily: 'var(--font-heading)' }}
+                            >
                                 Tasks
                             </h1>
                         </div>
                         <Button
                             onClick={() => setCreateModalOpen(true)}
-                            className="bg-gray-800 hover:bg-gray-700 dark:bg-gray-200 dark:hover:bg-gray-300 dark:text-gray-900"
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white dark:bg-indigo-500 dark:hover:bg-indigo-600"
                         >
                             <Plus className="h-4 w-4 mr-2" />
                             New Task
@@ -223,60 +227,60 @@ export default function TasksPage() {
             </div>
 
             {/* Main Content */}
-            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in-up">
                 {/* Progress Bar */}
-                <div className="mb-8 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+                <div className="mb-8 p-4 bg-white dark:bg-[oklch(0.15_0.025_265)] rounded-xl border border-gray-200/60 dark:border-[oklch(0.25_0.04_265/40%)] shadow-sm">
                     <div className="flex justify-between items-center mb-2">
                         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Task Completion</span>
-                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{Math.round(progress)}%</span>
+                        <span className="text-sm font-bold text-gray-900 dark:text-gray-100 tabular-nums">{Math.round(progress)}%</span>
                     </div>
                     <Progress value={progress} className="h-2" />
                 </div>
 
                 {/* Stats Cards */}
                 {stats && (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                        <Card>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 stagger-children">
+                        <Card className="border-0 shadow-sm dark:bg-[oklch(0.15_0.025_265)]">
                             <CardContent className="p-4 flex items-center gap-3">
-                                <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900">
+                                <div className="p-2.5 rounded-xl bg-blue-100 dark:bg-blue-900/30">
                                     <ListTodo className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                                 </div>
                                 <div>
-                                    <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.total}</p>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">Total</p>
+                                    <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 tabular-nums">{stats.total}</p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Total</p>
                                 </div>
                             </CardContent>
                         </Card>
-                        <Card>
+                        <Card className="border-0 shadow-sm dark:bg-[oklch(0.15_0.025_265)]">
                             <CardContent className="p-4 flex items-center gap-3">
-                                <div className="p-2 rounded-lg bg-yellow-100 dark:bg-yellow-900">
-                                    <Clock className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                                <div className="p-2.5 rounded-xl bg-amber-100 dark:bg-amber-900/30">
+                                    <Clock className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                                 </div>
                                 <div>
-                                    <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.pending}</p>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">Pending</p>
+                                    <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 tabular-nums">{stats.pending}</p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Pending</p>
                                 </div>
                             </CardContent>
                         </Card>
-                        <Card>
+                        <Card className="border-0 shadow-sm dark:bg-[oklch(0.15_0.025_265)]">
                             <CardContent className="p-4 flex items-center gap-3">
-                                <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900">
-                                    <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+                                <div className="p-2.5 rounded-xl bg-emerald-100 dark:bg-emerald-900/30">
+                                    <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                                 </div>
                                 <div>
-                                    <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.completed}</p>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">Completed</p>
+                                    <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 tabular-nums">{stats.completed}</p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Completed</p>
                                 </div>
                             </CardContent>
                         </Card>
-                        <Card>
+                        <Card className="border-0 shadow-sm dark:bg-[oklch(0.15_0.025_265)]">
                             <CardContent className="p-4 flex items-center gap-3">
-                                <div className="p-2 rounded-lg bg-red-100 dark:bg-red-900">
+                                <div className="p-2.5 rounded-xl bg-red-100 dark:bg-red-900/30">
                                     <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
                                 </div>
                                 <div>
-                                    <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.overdue}</p>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">Overdue</p>
+                                    <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 tabular-nums">{stats.overdue}</p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Overdue</p>
                                 </div>
                             </CardContent>
                         </Card>
@@ -293,7 +297,7 @@ export default function TasksPage() {
                                 placeholder="Search tasks..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-500"
+                                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200/60 dark:border-[oklch(0.25_0.04_265/40%)] bg-white dark:bg-[oklch(0.15_0.025_265)] text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
                             />
                         </div>
                         <Button
@@ -309,7 +313,7 @@ export default function TasksPage() {
 
                     {/* Expandable Filters */}
                     {showFilters && (
-                        <Card>
+                        <Card className="border-0 shadow-sm dark:bg-[oklch(0.15_0.025_265)] animate-fade-in-up">
                             <CardContent className="p-4">
                                 <TaskFilters
                                     statusFilter={statusFilter}
@@ -338,10 +342,10 @@ export default function TasksPage() {
                         ))}
                     </div>
                 ) : !filteredTasks || filteredTasks.length === 0 ? (
-                    <Card className="py-16">
+                    <Card className="py-16 border-0 shadow-sm dark:bg-[oklch(0.15_0.025_265)]">
                         <CardContent className="text-center">
                             <ListTodo className="h-16 w-16 text-gray-300 dark:text-gray-600 mb-4 mx-auto" />
-                            <h3 className="text-2xl font-semibold mb-2 text-gray-900 dark:text-gray-100">
+                            <h3 className="text-2xl font-semibold mb-2 text-gray-900 dark:text-gray-100" style={{ fontFamily: 'var(--font-heading)' }}>
                                 {searchQuery || statusFilter !== 'all' || priorityFilter !== 'all' || categoryFilter !== 'all'
                                     ? 'No tasks found'
                                     : 'No tasks yet'
@@ -356,7 +360,7 @@ export default function TasksPage() {
                             {!searchQuery && statusFilter === 'all' && priorityFilter === 'all' && categoryFilter === 'all' && (
                                 <Button
                                     onClick={() => setCreateModalOpen(true)}
-                                    className="bg-gray-800 hover:bg-gray-700 dark:bg-gray-200 dark:hover:bg-gray-300 dark:text-gray-900"
+                                    className="bg-indigo-600 hover:bg-indigo-700 text-white dark:bg-indigo-500 dark:hover:bg-indigo-600"
                                 >
                                     <Plus className="h-4 w-4 mr-2" />
                                     Create Task
@@ -364,20 +368,117 @@ export default function TasksPage() {
                             )}
                         </CardContent>
                     </Card>
-                ) : (
-                    <div className="space-y-3">
-                        {filteredTasks.map((task) => (
-                            <div key={task.id} className="group">
-                                <TaskCard
-                                    task={task}
-                                    onToggleComplete={handleToggleComplete}
-                                    onEdit={setEditingTask}
-                                    onDelete={handleDelete}
-                                />
-                            </div>
-                        ))}
-                    </div>
-                )}
+                ) : (() => {
+                    const now = new Date()
+                    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+
+                    // Separate tasks into active, overdue, and completed
+                    const activeTasks = filteredTasks.filter(t =>
+                        t.status !== 'completed' && t.status !== 'cancelled' &&
+                        (!t.dueDate || new Date(t.dueDate) >= todayStart)
+                    )
+                    const overdueTasks = filteredTasks.filter(t =>
+                        t.status !== 'completed' && t.status !== 'cancelled' &&
+                        t.dueDate && new Date(t.dueDate) < todayStart
+                    )
+                    const completedTasks = filteredTasks
+                        .filter(t => t.status === 'completed' || t.status === 'cancelled')
+                        .sort((a, b) => {
+                            const dateA = a.completedAt ? new Date(a.completedAt).getTime() : 0
+                            const dateB = b.completedAt ? new Date(b.completedAt).getTime() : 0
+                            return dateB - dateA // newest first
+                        })
+
+                    return (
+                        <div className="space-y-6">
+                            {/* Overdue Tasks */}
+                            {overdueTasks.length > 0 && (
+                                <div>
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <AlertCircle className="h-4 w-4 text-red-500" />
+                                        <h3 className="text-sm font-semibold text-red-600 dark:text-red-400 uppercase tracking-wider">
+                                            Overdue ({overdueTasks.length})
+                                        </h3>
+                                    </div>
+                                    <div className="space-y-3">
+                                        {overdueTasks.map((task) => (
+                                            <div key={task.id} className="group">
+                                                <TaskCard
+                                                    task={task}
+                                                    onToggleComplete={handleToggleComplete}
+                                                    onEdit={setEditingTask}
+                                                    onDelete={handleDelete}
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Active Tasks */}
+                            {activeTasks.length > 0 && (
+                                <div>
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <Clock className="h-4 w-4 text-blue-500" />
+                                        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                                            Active ({activeTasks.length})
+                                        </h3>
+                                    </div>
+                                    <div className="space-y-3">
+                                        {activeTasks.map((task) => (
+                                            <div key={task.id} className="group">
+                                                <TaskCard
+                                                    task={task}
+                                                    onToggleComplete={handleToggleComplete}
+                                                    onEdit={setEditingTask}
+                                                    onDelete={handleDelete}
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeTasks.length === 0 && overdueTasks.length === 0 && (
+                                <div className="text-center py-8 text-gray-500">
+                                    <CheckCircle2 className="h-12 w-12 mx-auto mb-3 text-green-500" />
+                                    <p className="font-medium">All caught up! 🎉</p>
+                                    <p className="text-sm mt-1">No pending tasks remaining.</p>
+                                </div>
+                            )}
+
+                            {/* Completed/Previous Tasks — Collapsible */}
+                            {completedTasks.length > 0 && (
+                                <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                                    <button
+                                        onClick={() => setShowPreviousTasks(!showPreviousTasks)}
+                                        className="flex items-center gap-2 mb-3 w-full text-left hover:opacity-80 transition-opacity"
+                                    >
+                                        <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showPreviousTasks ? 'rotate-0' : '-rotate-90'}`} />
+                                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                                        <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                            Previous Tasks ({completedTasks.length})
+                                        </h3>
+                                    </button>
+                                    {showPreviousTasks && (
+                                        <div className="space-y-3 opacity-75">
+                                            {completedTasks.map((task) => (
+                                                <div key={task.id} className="group">
+                                                    <TaskCard
+                                                        task={task}
+                                                        onToggleComplete={handleToggleComplete}
+                                                        onEdit={setEditingTask}
+                                                        onDelete={handleDelete}
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )
+                })()}
             </div>
 
             {/* Create Task Modal */}

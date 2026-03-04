@@ -97,12 +97,12 @@ export function Navbar() {
     const streak = streakData?.currentStreak ?? 0
 
     return (
-        <nav ref={navRef} className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border-b border-gray-200 dark:border-gray-800">
+        <nav ref={navRef} className="sticky top-0 z-50 bg-white/70 dark:bg-[oklch(0.12_0.025_265/70%)] backdrop-blur-xl border-b border-gray-200/60 dark:border-[oklch(0.25_0.04_265/40%)] shadow-sm dark:shadow-none">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-16">
                     {/* Left: Logo */}
                     <Link href="/dashboard" className="flex items-center gap-3 group">
-                        <div className="relative w-8 h-8 rounded-full overflow-hidden shadow-sm border border-gray-200 dark:border-gray-700 dark:shadow-[0_0_15px_rgba(255,255,255,0.15)] transition-all">
+                        <div className="relative w-9 h-9 rounded-xl overflow-hidden shadow-sm border border-gray-200 dark:border-[oklch(0.3_0.05_265/50%)] group-hover:shadow-md dark:group-hover:shadow-[0_0_15px_oklch(0.65_0.22_265/30%)] transition-all duration-300">
                             <Image
                                 src="/logo.png"
                                 alt="Momentum Logo"
@@ -110,7 +110,7 @@ export function Navbar() {
                                 className="object-cover"
                             />
                         </div>
-                        <span className="text-xl font-bold text-gray-900 dark:text-white hidden sm:block tracking-tight">
+                        <span className="text-xl font-bold text-gray-900 dark:text-white hidden sm:block tracking-tight" style={{ fontFamily: 'var(--font-heading)' }}>
                             Momentum
                         </span>
                     </Link>
@@ -129,9 +129,9 @@ export function Navbar() {
                     <div className="flex items-center gap-2 sm:gap-4">
                         {/* Streak Badge */}
                         {status === 'authenticated' && (
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-orange-100 to-red-100 dark:from-orange-900/30 dark:to-red-900/30 rounded-full border border-orange-200 dark:border-orange-800">
-                                <Flame className="h-4 w-4 text-orange-500 animate-pulse" />
-                                <span className="text-sm font-bold text-orange-600 dark:text-orange-400">
+                            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-orange-100 to-amber-100 dark:from-orange-900/20 dark:to-amber-900/20 rounded-full border border-orange-200/80 dark:border-orange-700/40 shadow-sm">
+                                <Flame className="h-4 w-4 text-orange-500" />
+                                <span className="text-sm font-bold text-orange-600 dark:text-orange-400 tabular-nums">
                                     {streak}
                                 </span>
                             </div>
@@ -162,7 +162,7 @@ export function Navbar() {
 
                                 {/* Dropdown Menu */}
                                 {isProfileOpen && (
-                                    <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50">
+                                    <div className="absolute right-0 mt-2 w-56 bg-white/95 dark:bg-[oklch(0.15_0.03_265/95%)] backdrop-blur-xl rounded-xl shadow-lg border border-gray-200/80 dark:border-[oklch(0.25_0.04_265/50%)] py-2 z-50 animate-scale-in">
                                         <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
                                             <p className="font-medium text-gray-900 dark:text-white truncate">
                                                 {session?.user?.name}

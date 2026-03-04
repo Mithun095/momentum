@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Plus, Calendar, List } from 'lucide-react'
+import { Plus, Calendar, List, ArrowLeft } from 'lucide-react'
 import { api } from '@/lib/trpc/client'
 import { useToast } from '@/hooks/use-toast'
 import { EventCalendar } from '@/components/events/EventCalendar'
@@ -61,79 +61,97 @@ export default function EventsPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-6">
-            <div className="max-w-7xl mx-auto">
-                {/* Header */}
-                <div className="flex items-center justify-between mb-8">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                            Events
-                        </h1>
-                        <p className="text-gray-600 dark:text-gray-400 mt-1">
-                            Manage your calendar and upcoming events
-                        </p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
-                            <Button
-                                variant={view === 'calendar' ? 'default' : 'ghost'}
-                                size="sm"
-                                onClick={() => setView('calendar')}
+        <div className="min-h-screen">
+            {/* Page Header */}
+            <div className="bg-white/70 dark:bg-[oklch(0.12_0.025_265/70%)] backdrop-blur-xl border-b border-gray-200/60 dark:border-[oklch(0.25_0.04_265/40%)]">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex justify-between items-center h-16 gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                            <a href="/dashboard">
+                                <Button variant="ghost" size="icon" className="-ml-2 flex-shrink-0">
+                                    <ArrowLeft className="h-5 w-5" />
+                                </Button>
+                            </a>
+                            <h1
+                                className="text-xl font-semibold text-gray-900 dark:text-gray-100"
+                                style={{ fontFamily: 'var(--font-heading)' }}
                             >
-                                <Calendar className="h-4 w-4 mr-2" />
                                 Calendar
-                            </Button>
+                            </h1>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                            <div className="hidden sm:flex items-center bg-gray-100/50 dark:bg-black/20 rounded-lg p-0.5 border border-gray-200/60 dark:border-white/5 mr-2">
+                                <Button
+                                    variant={view === 'calendar' ? 'secondary' : 'ghost'}
+                                    size="sm"
+                                    onClick={() => setView('calendar')}
+                                    className={`h-8 ${view === 'calendar' ? 'bg-white dark:bg-[oklch(0.18_0.03_265)] text-gray-900 dark:text-white shadow-sm' : ''}`}
+                                >
+                                    <Calendar className="h-4 w-4 mr-2" />
+                                    Grid
+                                </Button>
+                                <Button
+                                    variant={view === 'list' ? 'secondary' : 'ghost'}
+                                    size="sm"
+                                    onClick={() => setView('list')}
+                                    className={`h-8 ${view === 'list' ? 'bg-white dark:bg-[oklch(0.18_0.03_265)] text-gray-900 dark:text-white shadow-sm' : ''}`}
+                                >
+                                    <List className="h-4 w-4 mr-2" />
+                                    List
+                                </Button>
+                            </div>
                             <Button
-                                variant={view === 'list' ? 'default' : 'ghost'}
-                                size="sm"
-                                onClick={() => setView('list')}
+                                onClick={() => {
+                                    setSelectedDate(undefined)
+                                    setShowCreateModal(true)
+                                }}
+                                className="bg-indigo-600 hover:bg-indigo-700 text-white dark:bg-indigo-500 dark:hover:bg-indigo-600"
                             >
-                                <List className="h-4 w-4 mr-2" />
-                                List
+                                <Plus className="h-4 w-4 sm:mr-2" />
+                                <span className="hidden sm:inline">Add Event</span>
                             </Button>
                         </div>
-                        <Button onClick={() => {
-                            setSelectedDate(undefined)
-                            setShowCreateModal(true)
-                        }}>
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add Event
-                        </Button>
                     </div>
                 </div>
+            </div>
 
-                {/* Main content */}
+            {/* Main content */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in-up">
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                     {/* Calendar / List View */}
                     <div className="lg:col-span-3">
                         {isLoading ? (
-                            <Card>
+                            <Card className="border-0 shadow-sm dark:bg-[oklch(0.15_0.025_265)]">
                                 <CardContent className="p-6">
                                     <Skeleton className="h-[500px] w-full" />
                                 </CardContent>
                             </Card>
                         ) : view === 'calendar' ? (
-                            <EventCalendar
-                                events={events || []}
-                                onDateClick={handleDateClick}
-                                onEventClick={handleEventClick}
-                            />
+                            <Card className="border-0 shadow-sm dark:bg-[oklch(0.15_0.025_265)] overflow-hidden">
+                                <CardContent className="p-0 sm:p-4">
+                                    <EventCalendar
+                                        events={events || []}
+                                        onDateClick={handleDateClick}
+                                        onEventClick={handleEventClick}
+                                    />
+                                </CardContent>
+                            </Card>
                         ) : (
-                            <Card>
-                                <CardHeader>
+                            <Card className="border-0 shadow-sm dark:bg-[oklch(0.15_0.025_265)] overflow-hidden">
+                                <CardHeader className="border-b border-gray-100 dark:border-white/5 pb-4">
                                     <CardTitle>All Events</CardTitle>
                                 </CardHeader>
-                                <CardContent>
+                                <CardContent className="p-4 sm:p-6">
                                     {!events || events.length === 0 ? (
                                         <div className="text-center py-12">
                                             <div className="text-6xl mb-4">📅</div>
-                                            <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">
+                                            <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white" style={{ fontFamily: 'var(--font-heading)' }}>
                                                 No events yet
                                             </h3>
-                                            <p className="text-gray-600 dark:text-gray-400 mb-4">
+                                            <p className="text-gray-600 dark:text-gray-400 mb-6">
                                                 Create your first event to get started
                                             </p>
-                                            <Button onClick={() => setShowCreateModal(true)}>
+                                            <Button onClick={() => setShowCreateModal(true)} className="bg-indigo-600 dark:bg-indigo-500 text-white">
                                                 <Plus className="h-4 w-4 mr-2" />
                                                 Add Event
                                             </Button>
@@ -156,10 +174,12 @@ export default function EventsPage() {
                     </div>
 
                     {/* Sidebar - Upcoming Events */}
-                    <div className="lg:col-span-1">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-lg">Upcoming Events</CardTitle>
+                    <div className="lg:col-span-1 space-y-4">
+                        <Card className="border-0 shadow-sm dark:bg-[oklch(0.15_0.025_265)]">
+                            <CardHeader className="pb-3 border-b border-gray-100 dark:border-white/5 mb-3">
+                                <CardTitle className="text-lg" style={{ fontFamily: 'var(--font-heading)' }}>
+                                    Upcoming Events
+                                </CardTitle>
                             </CardHeader>
                             <CardContent>
                                 {!upcomingEvents || upcomingEvents.length === 0 ? (
@@ -183,16 +203,18 @@ export default function EventsPage() {
                         </Card>
 
                         {/* Quick stats */}
-                        <Card className="mt-4">
-                            <CardHeader>
-                                <CardTitle className="text-lg">This Month</CardTitle>
+                        <Card className="border-0 shadow-sm dark:bg-[oklch(0.15_0.025_265)]">
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-lg" style={{ fontFamily: 'var(--font-heading)' }}>
+                                    This Month
+                                </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="text-center">
-                                    <div className="text-4xl font-bold text-blue-600 dark:text-blue-400">
+                                <div className="text-center py-4">
+                                    <div className="text-4xl font-bold text-indigo-600 dark:text-indigo-400 tabular-nums mb-1">
                                         {events?.length || 0}
                                     </div>
-                                    <p className="text-gray-500 dark:text-gray-400 text-sm">
+                                    <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">
                                         Events scheduled
                                     </p>
                                 </div>
