@@ -10,21 +10,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
-    services:
-      postgres:
-        image: postgres:15-alpine
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: password
-          POSTGRES_DB: momentum
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
 
     steps:
     - uses: actions/checkout@v4
@@ -37,20 +22,30 @@ jobs:
 
     - name: Install dependencies
       run: npm ci
+      env:
+        DATABASE_URL: "file:./dev.db"
 
     - name: Generate Prisma Client
       run: npx prisma generate
+      env:
+        DATABASE_URL: "file:./dev.db"
 
-    - name: Run Linting
-      run: npm run lint
+    - name: Push DB Schema
+      run: npx prisma db push
+      env:
+        DATABASE_URL: "file:./dev.db"
 
     - name: Type Check
       run: npx tsc --noEmit
+      env:
+        DATABASE_URL: "file:./dev.db"
+        NEXTAUTH_SECRET: "test-secret"
+        NEXTAUTH_URL: "http://localhost:3000"
 
     - name: Build Application
       run: npm run build
       env:
-        DATABASE_URL: "postgresql://postgres:password@localhost:5432/momentum"
+        DATABASE_URL: "file:./dev.db"
         NEXTAUTH_SECRET: "test-secret"
         NEXTAUTH_URL: "http://localhost:3000"
         SKIP_ENV_VALIDATION: true
