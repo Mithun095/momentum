@@ -38,6 +38,8 @@
   ],
   "exclude": [
     "node_modules",
-    "prisma.config.ts"
+    "prisma.config.ts",
+    "scripts",
+    "test-password.ts"
   ]
 }
