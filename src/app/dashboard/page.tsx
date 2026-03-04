@@ -220,7 +220,7 @@ export default function DashboardPage() {
                         className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight"
                         style={{ fontFamily: 'var(--font-heading)' }}
                     >
-                        {greeting()}, {session?.user?.name?.split(' ')[0] || 'there'} ✨
+                        {greeting()}, {session?.user?.name?.split(' ')[0] || 'there'}
                     </h1>
                     <p className="text-muted-foreground mt-1.5 text-base">
                         {format(new Date(), 'EEEE, MMMM d')} — Here&apos;s your overview for today
@@ -236,8 +236,8 @@ export default function DashboardPage() {
                 >
                     <motion.div variants={fadeUp}>
                         <Link href="/dashboard/habits">
-                            <Card className="group card-3d cursor-pointer overflow-hidden relative border-0 glass-card hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-300">
-                                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-green-500/5 opacity-60 group-hover:opacity-100 transition-opacity" />
+                            <Card className="group card-3d cursor-pointer overflow-hidden relative border-0 glass-card hover:shadow-xl hover:shadow-amber-500/5 transition-all duration-300">
+                                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/8 to-yellow-500/[0.03] opacity-60 group-hover:opacity-100 transition-opacity" />
                                 <CardContent className="p-4 sm:p-5 relative">
                                     <div className="flex items-center justify-between">
                                         <div>
@@ -246,8 +246,8 @@ export default function DashboardPage() {
                                             </p>
                                             <p className="text-sm text-muted-foreground font-medium mt-0.5">Habits</p>
                                         </div>
-                                        <div className="p-2.5 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 group-hover:scale-110 transition-transform duration-300">
-                                            <CheckCircle2 className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+                                        <div className="p-2.5 rounded-xl bg-amber-100 dark:bg-amber-900/20 group-hover:scale-110 transition-transform duration-300">
+                                            <CheckCircle2 className="h-6 w-6 text-amber-700 dark:text-amber-400" />
                                         </div>
                                     </div>
                                     <Progress value={habitProgress} className="h-1.5 mt-3" />
@@ -258,8 +258,8 @@ export default function DashboardPage() {
 
                     <motion.div variants={fadeUp}>
                         <Link href="/dashboard/tasks">
-                            <Card className="group card-3d cursor-pointer overflow-hidden relative border-0 glass-card hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300">
-                                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-indigo-500/5 opacity-60 group-hover:opacity-100 transition-opacity" />
+                            <Card className="group card-3d cursor-pointer overflow-hidden relative border-0 glass-card hover:shadow-xl hover:shadow-amber-500/5 transition-all duration-300">
+                                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/8 to-yellow-500/[0.03] opacity-60 group-hover:opacity-100 transition-opacity" />
                                 <CardContent className="p-4 sm:p-5 relative">
                                     <div className="flex items-center justify-between">
                                         <div>
@@ -268,8 +268,8 @@ export default function DashboardPage() {
                                             </p>
                                             <p className="text-sm text-muted-foreground font-medium mt-0.5">Tasks</p>
                                         </div>
-                                        <div className="p-2.5 rounded-xl bg-blue-100 dark:bg-blue-900/30 group-hover:scale-110 transition-transform duration-300">
-                                            <ListTodo className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                                        <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-900/20 group-hover:scale-110 transition-transform duration-300">
+                                            <ListTodo className="h-6 w-6 text-amber-700 dark:text-amber-400" />
                                         </div>
                                     </div>
                                     <Progress value={taskProgress} className="h-1.5 mt-3" />
@@ -280,8 +280,8 @@ export default function DashboardPage() {
 
                     <motion.div variants={fadeUp}>
                         <Link href="/dashboard/goals">
-                            <Card className="group card-3d cursor-pointer overflow-hidden relative border-0 glass-card hover:shadow-xl hover:shadow-violet-500/5 transition-all duration-300">
-                                <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 to-purple-500/5 opacity-60 group-hover:opacity-100 transition-opacity" />
+                            <Card className="group card-3d cursor-pointer overflow-hidden relative border-0 glass-card hover:shadow-xl hover:shadow-amber-500/5 transition-all duration-300">
+                                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/8 to-yellow-500/[0.03] opacity-60 group-hover:opacity-100 transition-opacity" />
                                 <CardContent className="p-4 sm:p-5 relative">
                                     <div className="flex items-center justify-between">
                                         <div>
@@ -290,8 +290,8 @@ export default function DashboardPage() {
                                             </p>
                                             <p className="text-sm text-muted-foreground font-medium mt-0.5">Goals</p>
                                         </div>
-                                        <div className="p-2.5 rounded-xl bg-violet-100 dark:bg-violet-900/30 group-hover:scale-110 transition-transform duration-300">
-                                            <Target className="h-6 w-6 text-violet-600 dark:text-violet-400" />
+                                        <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-900/20 group-hover:scale-110 transition-transform duration-300">
+                                            <Target className="h-6 w-6 text-amber-700 dark:text-amber-400" />
                                         </div>
                                     </div>
                                 </CardContent>
@@ -302,7 +302,7 @@ export default function DashboardPage() {
                     <motion.div variants={fadeUp}>
                         <Link href="/dashboard/journal">
                             <Card className="group card-3d cursor-pointer overflow-hidden relative border-0 glass-card hover:shadow-xl hover:shadow-amber-500/5 transition-all duration-300">
-                                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-orange-500/5 opacity-60 group-hover:opacity-100 transition-opacity" />
+                                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/8 to-yellow-500/[0.03] opacity-60 group-hover:opacity-100 transition-opacity" />
                                 <CardContent className="p-4 sm:p-5 relative">
                                     <div className="flex items-center justify-between">
                                         <div>

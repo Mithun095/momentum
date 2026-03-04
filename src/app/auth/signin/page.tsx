@@ -143,7 +143,7 @@ export default function SignInPage() {
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     required
-                                    className="h-12 glass border-border/50 rounded-xl focus:ring-2 focus:ring-indigo-500/30 transition-all"
+                                    className="h-12 glass border-border/50 rounded-xl focus:ring-2 focus:ring-amber-500/30 transition-all"
                                 />
                             </div>
 
@@ -154,16 +154,16 @@ export default function SignInPage() {
                                 <Input
                                     id="password"
                                     type="password"
-                                    placeholder="••••••••"
+                                    placeholder="Enter your password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
-                                    className="h-12 glass border-border/50 rounded-xl focus:ring-2 focus:ring-indigo-500/30 transition-all"
+                                    className="h-12 glass border-border/50 rounded-xl focus:ring-2 focus:ring-amber-500/30 transition-all"
                                 />
                                 <div className="mt-2 text-right">
                                     <Link
                                         href="/auth/forgot-password"
-                                        className="text-sm text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors"
+                                        className="text-sm text-amber-700 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-300 transition-colors"
                                     >
                                         Forgot password?
                                     </Link>
@@ -182,7 +182,7 @@ export default function SignInPage() {
 
                             <Button
                                 type="submit"
-                                className="w-full h-12 text-base bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all duration-300 rounded-xl btn-shine"
+                                className="w-full h-12 text-base bg-gradient-to-r from-amber-600 to-yellow-500 hover:from-amber-700 hover:to-yellow-600 text-white shadow-lg shadow-amber-500/20 hover:shadow-amber-500/35 transition-all duration-300 rounded-xl btn-shine"
                                 disabled={isLoading}
                             >
                                 {isLoading ? (
@@ -198,7 +198,7 @@ export default function SignInPage() {
                             Don&apos;t have an account?{' '}
                             <Link
                                 href="/auth/signup"
-                                className="font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors"
+                                className="font-medium text-amber-700 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-300 transition-colors"
                             >
                                 Sign up
                             </Link>

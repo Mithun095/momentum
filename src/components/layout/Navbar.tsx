@@ -16,12 +16,9 @@ import {
     ChevronDown,
     Menu,
     X,
-    Palette,
-    Check,
     Sun,
     Moon,
-    Stars,
-    Sunrise,
+    Check,
     Home,
     CheckSquare,
     Book,
@@ -36,8 +33,6 @@ import { useTheme, themes } from '@/components/theme/ThemeProvider'
 const themeIcons = {
     light: Sun,
     dark: Moon,
-    midnight: Stars,
-    sunrise: Sunrise,
 }
 
 const navLinks = [
@@ -56,7 +51,6 @@ export function Navbar() {
     const [currentTime, setCurrentTime] = useState(new Date())
     const [isMenuOpen, setIsMenuOpen] = useState(false)
     const [isProfileOpen, setIsProfileOpen] = useState(false)
-    const [isThemeOpen, setIsThemeOpen] = useState(false)
     const activityRecorded = useRef(false)
 
     let theme: keyof typeof themes = 'light'
@@ -68,6 +62,7 @@ export function Navbar() {
     } catch { }
 
     const ThemeIcon = themeIcons[theme] || Sun
+    const nextTheme = theme === 'light' ? 'dark' : 'light'
 
     const navRef = useRef<HTMLElement>(null)
 
@@ -76,7 +71,6 @@ export function Navbar() {
             if (navRef.current && !navRef.current.contains(event.target as Node)) {
                 setIsMenuOpen(false)
                 setIsProfileOpen(false)
-                setIsThemeOpen(false)
             }
         }
         document.addEventListener('mousedown', handleClickOutside)
@@ -111,7 +105,7 @@ export function Navbar() {
                 <div className="flex justify-between items-center h-16">
                     {/* Left: Logo */}
                     <Link href="/dashboard" className="flex items-center gap-3 group">
-                        <div className="relative w-9 h-9 rounded-xl overflow-hidden shadow-sm border border-border/50 group-hover:shadow-lg group-hover:shadow-indigo-500/20 transition-all duration-300">
+                        <div className="relative w-9 h-9 rounded-xl overflow-hidden shadow-sm border border-border/50 group-hover:shadow-lg group-hover:shadow-amber-500/15 transition-all duration-300">
                             <Image
                                 src="/logo.png"
                                 alt="Momentum Logo"
@@ -142,12 +136,21 @@ export function Navbar() {
                         {/* Streak Badge */}
                         {status === 'authenticated' && (
                             <div className="flex items-center gap-1.5 px-3 py-1.5 glass-card rounded-full">
-                                <Flame className="h-4 w-4 text-orange-500 animate-fire-pulse" />
-                                <span className="text-sm font-bold text-orange-600 dark:text-orange-400 tabular-nums">
+                                <Flame className="h-4 w-4 text-amber-500 animate-fire-pulse" />
+                                <span className="text-sm font-bold text-amber-700 dark:text-amber-400 tabular-nums">
                                     {streak}
                                 </span>
                             </div>
                         )}
+
+                        {/* Theme toggle */}
+                        <button
+                            onClick={() => setTheme(nextTheme)}
+                            className="hidden md:flex p-2 rounded-xl hover:bg-accent/50 transition-colors"
+                            title={`Switch to ${nextTheme} mode`}
+                        >
+                            <ThemeIcon className="h-5 w-5 text-muted-foreground" />
+                        </button>
 
                         {/* Mobile menu toggle */}
                         <button
@@ -169,7 +172,7 @@ export function Navbar() {
                                     onClick={() => setIsProfileOpen(!isProfileOpen)}
                                     className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-accent/50 transition-all duration-200"
                                 >
-                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-sm font-medium shadow-sm">
+                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center text-white text-sm font-medium shadow-sm">
                                         {session?.user?.name?.[0]?.toUpperCase() || 'U'}
                                     </div>
                                     <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''}`} />
@@ -206,48 +209,6 @@ export function Navbar() {
                                             ))}
                                         </div>
 
-                                        {/* Theme Submenu */}
-                                        <div className="border-t border-border/50 pt-1">
-                                            <div className="relative">
-                                                <button
-                                                    onClick={() => setIsThemeOpen(!isThemeOpen)}
-                                                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-foreground/80 hover:text-foreground hover:bg-accent/50 w-full transition-colors"
-                                                >
-                                                    <Palette className="h-4 w-4" />
-                                                    <span className="flex-1 text-left">Theme</span>
-                                                    <ThemeIcon className="h-4 w-4" />
-                                                </button>
-
-                                                {isThemeOpen && (
-                                                    <div className="absolute right-full top-0 mr-2 w-44 glass-card rounded-xl py-2 animate-scale-in">
-                                                        {(Object.keys(themes) as Array<keyof typeof themes>).map((key) => {
-                                                            const Icon = themeIcons[key]
-                                                            return (
-                                                                <button
-                                                                    key={key}
-                                                                    onClick={() => {
-                                                                        setTheme(key)
-                                                                        setIsThemeOpen(false)
-                                                                    }}
-                                                                    className={`
-                                                                        w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors
-                                                                        ${theme === key
-                                                                            ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400'
-                                                                            : 'text-foreground/80 hover:bg-accent/50'
-                                                                        }
-                                                                    `}
-                                                                >
-                                                                    <Icon className="h-4 w-4" />
-                                                                    <span className="flex-1 text-left">{themes[key].name}</span>
-                                                                    {theme === key && <Check className="h-4 w-4" />}
-                                                                </button>
-                                                            )
-                                                        })}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-
                                         <div className="border-t border-border/50 pt-1">
                                             <button
                                                 onClick={() => signOut({ callbackUrl: '/' })}
@@ -262,7 +223,7 @@ export function Navbar() {
                             </div>
                         ) : (
                             <Link href="/auth/signin">
-                                <Button className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg shadow-indigo-500/25 btn-shine">
+                                <Button className="bg-gradient-to-r from-amber-600 to-yellow-500 hover:from-amber-700 hover:to-yellow-600 text-white shadow-lg shadow-amber-500/20 btn-shine">
                                     Sign In
                                 </Button>
                             </Link>
@@ -274,7 +235,7 @@ export function Navbar() {
                 {isMenuOpen && status === 'authenticated' && (
                     <div className="md:hidden py-4 border-t border-border/30 animate-fade-in-up">
                         <div className="text-center mb-4 text-sm text-muted-foreground">
-                            {formattedDate} • {formattedTime}
+                            {formattedDate} &middot; {formattedTime}
                         </div>
 
                         {/* Navigation Links */}
@@ -289,7 +250,7 @@ export function Navbar() {
                                         className={`
                                             flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all duration-200
                                             ${isActive
-                                                ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium'
+                                                ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 font-medium'
                                                 : 'text-foreground/70 hover:text-foreground hover:bg-accent/50'
                                             }
                                         `}
@@ -320,30 +281,15 @@ export function Navbar() {
                             ))}
                         </div>
 
-                        {/* Theme Selector */}
+                        {/* Theme Toggle */}
                         <div className="px-4 py-3 border-t border-border/30">
-                            <div className="text-xs text-muted-foreground mb-2">Theme</div>
-                            <div className="flex gap-2 flex-wrap">
-                                {(Object.keys(themes) as Array<keyof typeof themes>).map((key) => {
-                                    const Icon = themeIcons[key]
-                                    return (
-                                        <button
-                                            key={key}
-                                            onClick={() => setTheme(key)}
-                                            className={`
-                                                px-3 py-2 rounded-xl text-sm flex items-center gap-2 transition-all duration-200
-                                                ${theme === key
-                                                    ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20'
-                                                    : 'bg-accent/30 text-foreground/70 hover:bg-accent/50'
-                                                }
-                                            `}
-                                        >
-                                            <Icon className="h-4 w-4" />
-                                            <span>{themes[key].name}</span>
-                                        </button>
-                                    )
-                                })}
-                            </div>
+                            <button
+                                onClick={() => setTheme(nextTheme)}
+                                className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-foreground/70 hover:text-foreground hover:bg-accent/50 transition-colors w-full"
+                            >
+                                <ThemeIcon className="h-4 w-4" />
+                                <span>Switch to {themes[nextTheme].name} mode</span>
+                            </button>
                         </div>
 
                         <button

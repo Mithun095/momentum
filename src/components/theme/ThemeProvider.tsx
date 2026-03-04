@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 
-type Theme = 'light' | 'dark' | 'midnight' | 'sunrise'
+type Theme = 'light' | 'dark'
 
 interface ThemeProviderContextType {
     theme: Theme
@@ -15,35 +15,27 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const [theme, setTheme] = useState<Theme>('light')
     const [mounted, setMounted] = useState(false)
 
-    // Load theme from localStorage on mount
     useEffect(() => {
         setMounted(true)
         const savedTheme = localStorage.getItem('momentum-theme') as Theme | null
-        if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark' || savedTheme === 'midnight' || savedTheme === 'sunrise')) {
+        if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark')) {
             setTheme(savedTheme)
         } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
             setTheme('dark')
         }
     }, [])
 
-    // Apply theme class to document
     useEffect(() => {
         if (!mounted) return
 
         const root = document.documentElement
+        root.classList.remove('light', 'dark')
 
-        // Remove all theme classes
-        root.classList.remove('light', 'dark', 'midnight', 'sunrise')
-
-        // Add base dark class for non-light/sunrise themes
-        if (theme !== 'light' && theme !== 'sunrise') {
+        if (theme === 'dark') {
             root.classList.add('dark')
         }
 
-        // Add specific theme class
         root.classList.add(theme)
-
-        // Save to localStorage
         localStorage.setItem('momentum-theme', theme)
     }, [theme, mounted])
 
@@ -66,30 +58,17 @@ export function useTheme() {
     return context
 }
 
-// Theme definitions
 export const themes = {
     light: {
         name: 'Light',
         icon: 'sun',
-        primary: '#6366f1',
-        background: '#ffffff',
+        primary: '#d97706',
+        background: '#fffdf7',
     },
     dark: {
         name: 'Dark',
         icon: 'moon',
-        primary: '#818cf8',
-        background: '#0f172a',
-    },
-    midnight: {
-        name: 'Midnight',
-        icon: 'stars',
-        primary: '#a78bfa',
-        background: '#0a0a1a',
-    },
-    sunrise: {
-        name: 'Sunrise',
-        icon: 'sunrise',
-        primary: '#eab308',
-        background: '#fffbeb',
+        primary: '#f59e0b',
+        background: '#0c0a09',
     },
 }

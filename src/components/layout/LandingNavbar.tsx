@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
@@ -10,11 +10,9 @@ export function LandingNavbar() {
     const [scrolled, setScrolled] = useState(false)
     const [mobileOpen, setMobileOpen] = useState(false)
 
-    useEffect(() => {
-        const handleScroll = () => setScrolled(window.scrollY > 20)
-        window.addEventListener('scroll', handleScroll, { passive: true })
-        return () => window.removeEventListener('scroll', handleScroll)
-    }, [])
+    if (typeof window !== 'undefined') {
+        window.addEventListener('scroll', () => setScrolled(window.scrollY > 20), { passive: true })
+    }
 
     return (
         <nav className={`
@@ -26,7 +24,7 @@ export function LandingNavbar() {
         `}>
             <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
                 <Link href="/" className="flex items-center gap-2.5 group">
-                    <div className="relative w-9 h-9 rounded-xl overflow-hidden shadow-sm border border-white/20 group-hover:shadow-lg group-hover:shadow-indigo-500/20 transition-all duration-300">
+                    <div className="relative w-9 h-9 rounded-xl overflow-hidden shadow-sm border border-white/20 group-hover:shadow-lg group-hover:shadow-amber-500/15 transition-all duration-300">
                         <Image
                             src="/logo.png"
                             alt="Momentum Logo"
@@ -57,7 +55,7 @@ export function LandingNavbar() {
                     <Link href="/auth/signup">
                         <Button
                             size="sm"
-                            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all duration-300 btn-shine"
+                            className="bg-gradient-to-r from-amber-600 to-yellow-500 hover:from-amber-700 hover:to-yellow-600 text-white shadow-lg shadow-amber-500/20 hover:shadow-amber-500/35 transition-all duration-300 btn-shine"
                         >
                             Get Started
                         </Button>
@@ -86,7 +84,7 @@ export function LandingNavbar() {
                             </Button>
                         </Link>
                         <Link href="/auth/signup" onClick={() => setMobileOpen(false)}>
-                            <Button className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white">
+                            <Button className="w-full bg-gradient-to-r from-amber-600 to-yellow-500 hover:from-amber-700 hover:to-yellow-600 text-white">
                                 Get Started
                             </Button>
                         </Link>

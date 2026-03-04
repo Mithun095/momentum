@@ -22,7 +22,7 @@ const Progress = React.forwardRef<
         >
             <div
                 data-slot="progress-indicator"
-                className="h-full w-full flex-1 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 dark:from-indigo-400 dark:to-purple-400 relative overflow-hidden"
+                className="h-full w-full flex-1 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 dark:from-amber-400 dark:to-yellow-300 relative overflow-hidden"
                 style={{
                     transform: `translateX(-${100 - clampedValue}%)`,
                     transition: 'transform 600ms cubic-bezier(0.4, 0, 0.2, 1)',
