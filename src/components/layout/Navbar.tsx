@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useSession, signOut } from 'next-auth/react'
+import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import {
     Flame,
@@ -20,7 +21,13 @@ import {
     Sun,
     Moon,
     Stars,
-    Sunrise
+    Sunrise,
+    Home,
+    CheckSquare,
+    Book,
+    ClipboardList,
+    Bot,
+    Calendar,
 } from 'lucide-react'
 import { api } from '@/lib/trpc/client'
 import { format } from 'date-fns'
@@ -33,28 +40,35 @@ const themeIcons = {
     sunrise: Sunrise,
 }
 
+const navLinks = [
+    { href: '/dashboard', label: 'Home', icon: Home },
+    { href: '/dashboard/habits', label: 'Habits', icon: CheckSquare },
+    { href: '/dashboard/tasks', label: 'Tasks', icon: ClipboardList },
+    { href: '/dashboard/journal', label: 'Journal', icon: Book },
+    { href: '/dashboard/events', label: 'Events', icon: Calendar },
+    { href: '/dashboard/goals', label: 'Goals', icon: Target },
+    { href: '/dashboard/analytics', label: 'Analytics', icon: BarChart3 },
+]
+
 export function Navbar() {
     const { data: session, status } = useSession()
+    const pathname = usePathname()
     const [currentTime, setCurrentTime] = useState(new Date())
     const [isMenuOpen, setIsMenuOpen] = useState(false)
     const [isProfileOpen, setIsProfileOpen] = useState(false)
     const [isThemeOpen, setIsThemeOpen] = useState(false)
     const activityRecorded = useRef(false)
 
-    // Theme - with fallback for when ThemeProvider isn't ready
     let theme: keyof typeof themes = 'light'
     let setTheme: (t: keyof typeof themes) => void = () => { }
     try {
         const themeContext = useTheme()
         theme = themeContext.theme
         setTheme = themeContext.setTheme
-    } catch {
-        // ThemeProvider not ready yet
-    }
+    } catch { }
 
     const ThemeIcon = themeIcons[theme] || Sun
 
-    // Close menu when clicking outside
     const navRef = useRef<HTMLElement>(null)
 
     useEffect(() => {
@@ -62,29 +76,24 @@ export function Navbar() {
             if (navRef.current && !navRef.current.contains(event.target as Node)) {
                 setIsMenuOpen(false)
                 setIsProfileOpen(false)
+                setIsThemeOpen(false)
             }
         }
-
         document.addEventListener('mousedown', handleClickOutside)
         return () => document.removeEventListener('mousedown', handleClickOutside)
     }, [])
 
-    // Update time every minute
     useEffect(() => {
-        const timer = setInterval(() => {
-            setCurrentTime(new Date())
-        }, 60000)
+        const timer = setInterval(() => setCurrentTime(new Date()), 60000)
         return () => clearInterval(timer)
     }, [])
 
-    // Get and update streak
     const { data: streakData } = api.streak.getStreak.useQuery(undefined, {
         enabled: status === 'authenticated',
     })
 
     const recordActivity = api.streak.recordActivity.useMutation()
 
-    // Record activity on mount when authenticated (only once)
     useEffect(() => {
         if (status === 'authenticated' && !activityRecorded.current) {
             activityRecorded.current = true
@@ -97,12 +106,12 @@ export function Navbar() {
     const streak = streakData?.currentStreak ?? 0
 
     return (
-        <nav ref={navRef} className="sticky top-0 z-50 bg-white/70 dark:bg-[oklch(0.12_0.025_265/70%)] backdrop-blur-xl border-b border-gray-200/60 dark:border-[oklch(0.25_0.04_265/40%)] shadow-sm dark:shadow-none">
+        <nav ref={navRef} className="sticky top-0 z-50 glass-nav">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-16">
                     {/* Left: Logo */}
                     <Link href="/dashboard" className="flex items-center gap-3 group">
-                        <div className="relative w-9 h-9 rounded-xl overflow-hidden shadow-sm border border-gray-200 dark:border-[oklch(0.3_0.05_265/50%)] group-hover:shadow-md dark:group-hover:shadow-[0_0_15px_oklch(0.65_0.22_265/30%)] transition-all duration-300">
+                        <div className="relative w-9 h-9 rounded-xl overflow-hidden shadow-sm border border-border/50 group-hover:shadow-lg group-hover:shadow-indigo-500/20 transition-all duration-300">
                             <Image
                                 src="/logo.png"
                                 alt="Momentum Logo"
@@ -110,27 +119,30 @@ export function Navbar() {
                                 className="object-cover"
                             />
                         </div>
-                        <span className="text-xl font-bold text-gray-900 dark:text-white hidden sm:block tracking-tight" style={{ fontFamily: 'var(--font-heading)' }}>
+                        <span
+                            className="text-xl font-bold text-foreground hidden sm:block tracking-tight"
+                            style={{ fontFamily: 'var(--font-heading)' }}
+                        >
                             Momentum
                         </span>
                     </Link>
 
                     {/* Center: Date/Time */}
                     <div className="hidden md:flex flex-col items-center text-sm">
-                        <span className="font-medium text-gray-900 dark:text-gray-100">
+                        <span className="font-medium text-foreground">
                             {formattedDate}
                         </span>
-                        <span className="text-gray-500 dark:text-gray-400 text-xs">
+                        <span className="text-muted-foreground text-xs">
                             {formattedTime}
                         </span>
                     </div>
 
                     {/* Right: Streak + Auth */}
-                    <div className="flex items-center gap-2 sm:gap-4">
+                    <div className="flex items-center gap-2 sm:gap-3">
                         {/* Streak Badge */}
                         {status === 'authenticated' && (
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-orange-100 to-amber-100 dark:from-orange-900/20 dark:to-amber-900/20 rounded-full border border-orange-200/80 dark:border-orange-700/40 shadow-sm">
-                                <Flame className="h-4 w-4 text-orange-500" />
+                            <div className="flex items-center gap-1.5 px-3 py-1.5 glass-card rounded-full">
+                                <Flame className="h-4 w-4 text-orange-500 animate-fire-pulse" />
                                 <span className="text-sm font-bold text-orange-600 dark:text-orange-400 tabular-nums">
                                     {streak}
                                 </span>
@@ -139,78 +151,67 @@ export function Navbar() {
 
                         {/* Mobile menu toggle */}
                         <button
-                            className="md:hidden p-2 text-gray-500 hover:text-gray-700"
+                            className="md:hidden p-2 rounded-xl hover:bg-accent/50 transition-colors"
                             onClick={() => setIsMenuOpen(!isMenuOpen)}
                         >
-                            {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                            {isMenuOpen
+                                ? <X className="h-5 w-5 text-muted-foreground" />
+                                : <Menu className="h-5 w-5 text-muted-foreground" />
+                            }
                         </button>
 
-                        {/* Auth Section */}
+                        {/* Desktop Auth Section */}
                         {status === 'loading' ? (
-                            <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse" />
+                            <div className="w-8 h-8 rounded-full bg-muted animate-pulse" />
                         ) : status === 'authenticated' ? (
                             <div className="relative hidden md:block">
                                 <button
                                     onClick={() => setIsProfileOpen(!isProfileOpen)}
-                                    className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                                    className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-accent/50 transition-all duration-200"
                                 >
-                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-sm font-medium">
+                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-sm font-medium shadow-sm">
                                         {session?.user?.name?.[0]?.toUpperCase() || 'U'}
                                     </div>
-                                    <ChevronDown className="h-4 w-4 text-gray-500" />
+                                    <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''}`} />
                                 </button>
 
-                                {/* Dropdown Menu */}
+                                {/* Profile Dropdown */}
                                 {isProfileOpen && (
-                                    <div className="absolute right-0 mt-2 w-56 bg-white/95 dark:bg-[oklch(0.15_0.03_265/95%)] backdrop-blur-xl rounded-xl shadow-lg border border-gray-200/80 dark:border-[oklch(0.25_0.04_265/50%)] py-2 z-50 animate-scale-in">
-                                        <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
-                                            <p className="font-medium text-gray-900 dark:text-white truncate">
+                                    <div className="absolute right-0 mt-2 w-56 glass-card rounded-2xl py-2 z-50 animate-scale-in">
+                                        <div className="px-4 py-3 border-b border-border/50">
+                                            <p className="font-medium text-foreground truncate">
                                                 {session?.user?.name}
                                             </p>
-                                            <p className="text-sm text-gray-500 truncate">
+                                            <p className="text-sm text-muted-foreground truncate">
                                                 {session?.user?.email}
                                             </p>
                                         </div>
 
-                                        <Link
-                                            href="/dashboard/goals"
-                                            className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                            onClick={() => setIsProfileOpen(false)}
-                                        >
-                                            <Target className="h-4 w-4" />
-                                            Goals
-                                        </Link>
-                                        <Link
-                                            href="/dashboard/analytics"
-                                            className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                            onClick={() => setIsProfileOpen(false)}
-                                        >
-                                            <BarChart3 className="h-4 w-4" />
-                                            Analytics
-                                        </Link>
-                                        <Link
-                                            href="/dashboard/workspace"
-                                            className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                            onClick={() => setIsProfileOpen(false)}
-                                        >
-                                            <Users className="h-4 w-4" />
-                                            Workspace
-                                        </Link>
-                                        <Link
-                                            href="/dashboard/settings"
-                                            className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                            onClick={() => setIsProfileOpen(false)}
-                                        >
-                                            <Settings className="h-4 w-4" />
-                                            Settings
-                                        </Link>
+                                        <div className="py-1">
+                                            {[
+                                                { href: '/dashboard/goals', icon: Target, label: 'Goals' },
+                                                { href: '/dashboard/analytics', icon: BarChart3, label: 'Analytics' },
+                                                { href: '/dashboard/workspace', icon: Users, label: 'Workspace' },
+                                                { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
+                                            ].map((item) => (
+                                                <Link
+                                                    key={item.href}
+                                                    href={item.href}
+                                                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-foreground/80 hover:text-foreground hover:bg-accent/50 transition-colors"
+                                                    onClick={() => setIsProfileOpen(false)}
+                                                >
+                                                    <item.icon className="h-4 w-4" />
+                                                    {item.label}
+                                                </Link>
+                                            ))}
+                                        </div>
 
                                         {/* Theme Submenu */}
-                                        <div className="border-t border-gray-100 dark:border-gray-700 mt-2 pt-2">
+                                        <div className="border-t border-border/50 pt-1">
                                             <div className="relative">
                                                 <button
                                                     onClick={() => setIsThemeOpen(!isThemeOpen)}
-                                                    className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 w-full"
+                                                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-foreground/80 hover:text-foreground hover:bg-accent/50 w-full transition-colors"
                                                 >
                                                     <Palette className="h-4 w-4" />
                                                     <span className="flex-1 text-left">Theme</span>
@@ -218,7 +219,7 @@ export function Navbar() {
                                                 </button>
 
                                                 {isThemeOpen && (
-                                                    <div className="absolute right-full top-0 mr-2 w-44 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-2">
+                                                    <div className="absolute right-full top-0 mr-2 w-44 glass-card rounded-xl py-2 animate-scale-in">
                                                         {(Object.keys(themes) as Array<keyof typeof themes>).map((key) => {
                                                             const Icon = themeIcons[key]
                                                             return (
@@ -229,10 +230,10 @@ export function Navbar() {
                                                                         setIsThemeOpen(false)
                                                                     }}
                                                                     className={`
-                                                                        w-full flex items-center gap-3 px-3 py-2 text-sm
+                                                                        w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors
                                                                         ${theme === key
-                                                                            ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400'
-                                                                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                                                            ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400'
+                                                                            : 'text-foreground/80 hover:bg-accent/50'
                                                                         }
                                                                     `}
                                                                 >
@@ -247,10 +248,10 @@ export function Navbar() {
                                             </div>
                                         </div>
 
-                                        <div className="border-t border-gray-100 dark:border-gray-700 mt-2 pt-2">
+                                        <div className="border-t border-border/50 pt-1">
                                             <button
                                                 onClick={() => signOut({ callbackUrl: '/' })}
-                                                className="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 w-full"
+                                                className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-500/10 w-full transition-colors"
                                             >
                                                 <LogOut className="h-4 w-4" />
                                                 Sign Out
@@ -261,7 +262,7 @@ export function Navbar() {
                             </div>
                         ) : (
                             <Link href="/auth/signin">
-                                <Button className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white">
+                                <Button className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg shadow-indigo-500/25 btn-shine">
                                     Sign In
                                 </Button>
                             </Link>
@@ -271,78 +272,87 @@ export function Navbar() {
 
                 {/* Mobile Menu */}
                 {isMenuOpen && status === 'authenticated' && (
-                    <div className="md:hidden py-4 border-t border-gray-200 dark:border-gray-700">
-                        <div className="text-center mb-4 text-sm text-gray-600 dark:text-gray-400">
+                    <div className="md:hidden py-4 border-t border-border/30 animate-fade-in-up">
+                        <div className="text-center mb-4 text-sm text-muted-foreground">
                             {formattedDate} • {formattedTime}
                         </div>
-                        <div className="space-y-1">
-                            <Link
-                                href="/dashboard/goals"
-                                onClick={() => setIsMenuOpen(false)}
-                                className="flex items-center gap-3 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
-                            >
-                                <Target className="h-4 w-4" />
-                                Goals
-                            </Link>
-                            <Link
-                                href="/dashboard/analytics"
-                                onClick={() => setIsMenuOpen(false)}
-                                className="flex items-center gap-3 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
-                            >
-                                <BarChart3 className="h-4 w-4" />
-                                Analytics
-                            </Link>
-                            <Link
-                                href="/dashboard/workspace"
-                                onClick={() => setIsMenuOpen(false)}
-                                className="flex items-center gap-3 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
-                            >
-                                <Users className="h-4 w-4" />
-                                Workspace
-                            </Link>
-                            <Link
-                                href="/dashboard/settings"
-                                onClick={() => setIsMenuOpen(false)}
-                                className="flex items-center gap-3 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
-                            >
-                                <Settings className="h-4 w-4" />
-                                Settings
-                            </Link>
 
-                            {/* Mobile Theme Selector */}
-                            <div className="px-4 py-2">
-                                <div className="text-xs text-gray-500 mb-2">Theme</div>
-                                <div className="flex gap-2">
-                                    {(Object.keys(themes) as Array<keyof typeof themes>).map((key) => {
-                                        const Icon = themeIcons[key]
-                                        return (
-                                            <button
-                                                key={key}
-                                                onClick={() => setTheme(key)}
-                                                className={`
-                                                    px-3 py-2 rounded-lg text-sm flex items-center gap-2
-                                                    ${theme === key
-                                                        ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800'
-                                                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
-                                                    }
-                                                `}
-                                            >
-                                                <Icon className="h-4 w-4" />
-                                                <span>{themes[key].name}</span>
-                                            </button>
-                                        )
-                                    })}
-                                </div>
-                            </div>
-
-                            <button
-                                onClick={() => signOut({ callbackUrl: '/' })}
-                                className="flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg w-full"
-                            >
-                                <LogOut className="h-4 w-4" />
-                                Sign Out
-                            </button>
+                        {/* Navigation Links */}
+                        <div className="space-y-0.5 mb-4">
+                            {navLinks.map((link) => {
+                                const isActive = pathname === link.href
+                                return (
+                                    <Link
+                                        key={link.href}
+                                        href={link.href}
+                                        onClick={() => setIsMenuOpen(false)}
+                                        className={`
+                                            flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all duration-200
+                                            ${isActive
+                                                ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium'
+                                                : 'text-foreground/70 hover:text-foreground hover:bg-accent/50'
+                                            }
+                                        `}
+                                    >
+                                        <link.icon className="h-4 w-4" />
+                                        {link.label}
+                                    </Link>
+                                )
+                            })}
                         </div>
+
+                        {/* Quick Links */}
+                        <div className="space-y-0.5 border-t border-border/30 pt-3 mb-3">
+                            {[
+                                { href: '/dashboard/workspace', icon: Users, label: 'Workspace' },
+                                { href: '/dashboard/ai', icon: Bot, label: 'AI Assistant' },
+                                { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
+                            ].map((link) => (
+                                <Link
+                                    key={link.href}
+                                    href={link.href}
+                                    onClick={() => setIsMenuOpen(false)}
+                                    className="flex items-center gap-3 px-4 py-2.5 text-foreground/70 hover:text-foreground hover:bg-accent/50 rounded-xl text-sm transition-colors"
+                                >
+                                    <link.icon className="h-4 w-4" />
+                                    {link.label}
+                                </Link>
+                            ))}
+                        </div>
+
+                        {/* Theme Selector */}
+                        <div className="px-4 py-3 border-t border-border/30">
+                            <div className="text-xs text-muted-foreground mb-2">Theme</div>
+                            <div className="flex gap-2 flex-wrap">
+                                {(Object.keys(themes) as Array<keyof typeof themes>).map((key) => {
+                                    const Icon = themeIcons[key]
+                                    return (
+                                        <button
+                                            key={key}
+                                            onClick={() => setTheme(key)}
+                                            className={`
+                                                px-3 py-2 rounded-xl text-sm flex items-center gap-2 transition-all duration-200
+                                                ${theme === key
+                                                    ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20'
+                                                    : 'bg-accent/30 text-foreground/70 hover:bg-accent/50'
+                                                }
+                                            `}
+                                        >
+                                            <Icon className="h-4 w-4" />
+                                            <span>{themes[key].name}</span>
+                                        </button>
+                                    )
+                                })}
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={() => signOut({ callbackUrl: '/' })}
+                            className="flex items-center gap-3 px-4 py-2.5 text-red-500 hover:bg-red-500/10 rounded-xl w-full text-sm transition-colors mt-2"
+                        >
+                            <LogOut className="h-4 w-4" />
+                            Sign Out
+                        </button>
                     </div>
                 )}
             </div>

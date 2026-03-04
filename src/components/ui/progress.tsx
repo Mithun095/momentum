@@ -11,7 +11,7 @@ const Progress = React.forwardRef<
         <div
             ref={ref}
             className={cn(
-                'relative h-4 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800',
+                'relative h-4 w-full overflow-hidden rounded-full bg-muted/60',
                 className
             )}
             role="progressbar"
@@ -21,10 +21,11 @@ const Progress = React.forwardRef<
             {...props}
         >
             <div
-                className="h-full w-full flex-1 bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-500 dark:to-purple-500"
+                data-slot="progress-indicator"
+                className="h-full w-full flex-1 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 dark:from-indigo-400 dark:to-purple-400 relative overflow-hidden"
                 style={{
                     transform: `translateX(-${100 - clampedValue}%)`,
-                    transition: 'transform 300ms cubic-bezier(0.4, 0, 0.2, 1)',
+                    transition: 'transform 600ms cubic-bezier(0.4, 0, 0.2, 1)',
                     willChange: 'transform',
                 }}
             />

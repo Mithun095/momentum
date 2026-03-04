@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -13,10 +13,10 @@ import { EventCalendar } from '@/components/events/EventCalendar'
 import { CreateEventModal } from '@/components/events/CreateEventModal'
 import { api } from '@/lib/trpc/client'
 import { useToast } from '@/hooks/use-toast'
+import { motion } from 'framer-motion'
 import {
     CheckCircle2,
     Circle,
-    Plus,
     ChevronRight,
     BookOpen,
     ListTodo,
@@ -24,10 +24,22 @@ import {
     Calendar,
     Sparkles,
     PenLine,
-    Flame,
     TrendingUp,
 } from 'lucide-react'
 import { format, startOfMonth, endOfMonth, startOfDay, endOfDay } from 'date-fns'
+
+const container = {
+    hidden: { opacity: 0 },
+    show: {
+        opacity: 1,
+        transition: { staggerChildren: 0.08, delayChildren: 0.1 }
+    }
+}
+
+const fadeUp = {
+    hidden: { opacity: 0, y: 16 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] as const } }
+}
 
 export default function DashboardPage() {
     const { data: session, status } = useSession()
@@ -35,15 +47,11 @@ export default function DashboardPage() {
     const [createEventOpen, setCreateEventOpen] = useState(false)
     const { toast } = useToast()
 
-    // Date range for current month events
     const monthStart = startOfMonth(new Date())
     const monthEnd = endOfMonth(new Date())
-
-    // Today's date range
     const todayStart = startOfDay(new Date())
     const todayEnd = endOfDay(new Date())
 
-    // Queries
     const { data: overview, isLoading } = api.dashboard.getOverview.useQuery({
         date: startOfDay(new Date()),
         year: new Date().getFullYear(),
@@ -61,7 +69,6 @@ export default function DashboardPage() {
 
     const utils = api.useUtils()
 
-    // Complete habit mutation (with optimistic update)
     const completeHabit = api.habit.markComplete.useMutation({
         onMutate: async (variables) => {
             await utils.dashboard.getOverview.cancel()
@@ -113,7 +120,6 @@ export default function DashboardPage() {
         onSettled: () => void utils.dashboard.getOverview.invalidate(),
     })
 
-    // Toggle task mutation (with optimistic update)
     const toggleTask = api.task.toggleComplete.useMutation({
         onMutate: async ({ id }) => {
             await utils.dashboard.getOverview.cancel()
@@ -138,36 +144,28 @@ export default function DashboardPage() {
         onSettled: () => void utils.dashboard.getOverview.invalidate(),
     })
 
-    // Map of completed habits today
     const completedToday = useMemo(() => {
         if (!completions) return new Set<string>()
         return new Set(completions.map(c => c.habitId))
     }, [completions])
 
-    // Stats
     const completedHabitsCount = completedToday.size
     const totalHabitsCount = habits?.length ?? 0
     const pendingTasksCount = tasks?.filter(t => t.status === 'pending').length ?? 0
     const activeGoalsCount = goals?.length ?? 0
 
-    // Progress Calculations
     const habitProgress = totalHabitsCount > 0 ? Math.min((completedHabitsCount / totalHabitsCount) * 100, 100) : 0
     const tasksTotal = tasks?.length ?? 0
     const tasksCompleted = tasksTotal - (tasks?.filter(t => t.status === 'pending').length ?? 0)
     const taskProgress = tasksTotal > 0 ? Math.min((tasksCompleted / tasksTotal) * 100, 100) : 0
 
-    // Handle date click on calendar
     const handleDateClick = (date: Date) => {
         setSelectedDate(date)
         setCreateEventOpen(true)
     }
 
-    // Handle event click
-    const handleEventClick = (event: { id: string }) => {
-        // Could open edit modal here
-    }
+    const handleEventClick = (event: { id: string }) => { }
 
-    // Calendar events formatted
     const calendarEvents = useMemo(() => {
         return events?.map(e => ({
             ...e,
@@ -191,16 +189,16 @@ export default function DashboardPage() {
                     <Skeleton className="h-5 w-48 mb-8" />
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                         {[1, 2, 3, 4].map(i => (
-                            <Skeleton key={i} className="h-24 rounded-xl" />
+                            <Skeleton key={i} className="h-28 rounded-2xl" />
                         ))}
                     </div>
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                         <div className="lg:col-span-4 space-y-6">
-                            <Skeleton className="h-48 rounded-xl" />
-                            <Skeleton className="h-64 rounded-xl" />
+                            <Skeleton className="h-48 rounded-2xl" />
+                            <Skeleton className="h-64 rounded-2xl" />
                         </div>
                         <div className="lg:col-span-8">
-                            <Skeleton className="h-[500px] rounded-xl" />
+                            <Skeleton className="h-[500px] rounded-2xl" />
                         </div>
                     </div>
                 </div>
@@ -211,281 +209,315 @@ export default function DashboardPage() {
     return (
         <div className="min-h-screen">
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Greeting Banner */}
-                <div className="mb-8 animate-fade-in-up">
+                {/* Greeting */}
+                <motion.div
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="mb-8"
+                >
                     <h1
-                        className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white tracking-tight"
+                        className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight"
                         style={{ fontFamily: 'var(--font-heading)' }}
                     >
                         {greeting()}, {session?.user?.name?.split(' ')[0] || 'there'} ✨
                     </h1>
-                    <p className="text-gray-500 dark:text-gray-400 mt-1.5 text-base">
+                    <p className="text-muted-foreground mt-1.5 text-base">
                         {format(new Date(), 'EEEE, MMMM d')} — Here&apos;s your overview for today
                     </p>
-                </div>
+                </motion.div>
 
-                {/* Quick Stats Row */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 stagger-children">
-                    <Link href="/dashboard/habits">
-                        <Card className="group hover:shadow-lg hover:scale-[1.03] transition-all duration-300 cursor-pointer overflow-hidden relative border-0 dark:bg-gradient-to-br dark:from-[oklch(0.16_0.04_155)] dark:to-[oklch(0.13_0.02_155)]">
-                            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-green-500/5 group-hover:from-emerald-500/15 group-hover:to-green-500/10 transition-colors" />
-                            <CardContent className="p-4 relative">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-2xl font-bold text-gray-900 dark:text-white tabular-nums">
-                                            {completedHabitsCount}/{totalHabitsCount}
-                                        </p>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Habits</p>
+                {/* Quick Stats */}
+                <motion.div
+                    variants={container}
+                    initial="hidden"
+                    animate="show"
+                    className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
+                >
+                    <motion.div variants={fadeUp}>
+                        <Link href="/dashboard/habits">
+                            <Card className="group card-3d cursor-pointer overflow-hidden relative border-0 glass-card hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-300">
+                                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-green-500/5 opacity-60 group-hover:opacity-100 transition-opacity" />
+                                <CardContent className="p-4 sm:p-5 relative">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-2xl sm:text-3xl font-bold text-foreground tabular-nums">
+                                                {completedHabitsCount}/{totalHabitsCount}
+                                            </p>
+                                            <p className="text-sm text-muted-foreground font-medium mt-0.5">Habits</p>
+                                        </div>
+                                        <div className="p-2.5 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 group-hover:scale-110 transition-transform duration-300">
+                                            <CheckCircle2 className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+                                        </div>
                                     </div>
-                                    <div className="p-2.5 rounded-xl bg-emerald-100 dark:bg-emerald-900/30">
-                                        <CheckCircle2 className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
-                                    </div>
-                                </div>
-                                <Progress value={habitProgress} className="h-1.5 mt-3" />
-                            </CardContent>
-                        </Card>
-                    </Link>
+                                    <Progress value={habitProgress} className="h-1.5 mt-3" />
+                                </CardContent>
+                            </Card>
+                        </Link>
+                    </motion.div>
 
-                    <Link href="/dashboard/tasks">
-                        <Card className="group hover:shadow-lg hover:scale-[1.03] transition-all duration-300 cursor-pointer overflow-hidden relative border-0 dark:bg-gradient-to-br dark:from-[oklch(0.16_0.04_265)] dark:to-[oklch(0.13_0.02_265)]">
-                            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-indigo-500/5 group-hover:from-blue-500/15 group-hover:to-indigo-500/10 transition-colors" />
-                            <CardContent className="p-4 relative">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-2xl font-bold text-gray-900 dark:text-white tabular-nums">
-                                            {pendingTasksCount}
-                                        </p>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Tasks</p>
+                    <motion.div variants={fadeUp}>
+                        <Link href="/dashboard/tasks">
+                            <Card className="group card-3d cursor-pointer overflow-hidden relative border-0 glass-card hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300">
+                                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-indigo-500/5 opacity-60 group-hover:opacity-100 transition-opacity" />
+                                <CardContent className="p-4 sm:p-5 relative">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-2xl sm:text-3xl font-bold text-foreground tabular-nums">
+                                                {pendingTasksCount}
+                                            </p>
+                                            <p className="text-sm text-muted-foreground font-medium mt-0.5">Tasks</p>
+                                        </div>
+                                        <div className="p-2.5 rounded-xl bg-blue-100 dark:bg-blue-900/30 group-hover:scale-110 transition-transform duration-300">
+                                            <ListTodo className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                                        </div>
                                     </div>
-                                    <div className="p-2.5 rounded-xl bg-blue-100 dark:bg-blue-900/30">
-                                        <ListTodo className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                                    </div>
-                                </div>
-                                <Progress value={taskProgress} className="h-1.5 mt-3" />
-                            </CardContent>
-                        </Card>
-                    </Link>
+                                    <Progress value={taskProgress} className="h-1.5 mt-3" />
+                                </CardContent>
+                            </Card>
+                        </Link>
+                    </motion.div>
 
-                    <Link href="/dashboard/goals">
-                        <Card className="group hover:shadow-lg hover:scale-[1.03] transition-all duration-300 cursor-pointer overflow-hidden relative border-0 dark:bg-gradient-to-br dark:from-[oklch(0.16_0.04_300)] dark:to-[oklch(0.13_0.02_300)]">
-                            <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 to-purple-500/5 group-hover:from-violet-500/15 group-hover:to-purple-500/10 transition-colors" />
-                            <CardContent className="p-4 relative">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-2xl font-bold text-gray-900 dark:text-white tabular-nums">
-                                            {activeGoalsCount}
-                                        </p>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Goals</p>
+                    <motion.div variants={fadeUp}>
+                        <Link href="/dashboard/goals">
+                            <Card className="group card-3d cursor-pointer overflow-hidden relative border-0 glass-card hover:shadow-xl hover:shadow-violet-500/5 transition-all duration-300">
+                                <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 to-purple-500/5 opacity-60 group-hover:opacity-100 transition-opacity" />
+                                <CardContent className="p-4 sm:p-5 relative">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-2xl sm:text-3xl font-bold text-foreground tabular-nums">
+                                                {activeGoalsCount}
+                                            </p>
+                                            <p className="text-sm text-muted-foreground font-medium mt-0.5">Goals</p>
+                                        </div>
+                                        <div className="p-2.5 rounded-xl bg-violet-100 dark:bg-violet-900/30 group-hover:scale-110 transition-transform duration-300">
+                                            <Target className="h-6 w-6 text-violet-600 dark:text-violet-400" />
+                                        </div>
                                     </div>
-                                    <div className="p-2.5 rounded-xl bg-violet-100 dark:bg-violet-900/30">
-                                        <Target className="h-6 w-6 text-violet-600 dark:text-violet-400" />
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </Link>
+                                </CardContent>
+                            </Card>
+                        </Link>
+                    </motion.div>
 
-                    <Link href="/dashboard/journal">
-                        <Card className="group hover:shadow-lg hover:scale-[1.03] transition-all duration-300 cursor-pointer overflow-hidden relative border-0 dark:bg-gradient-to-br dark:from-[oklch(0.16_0.04_55)] dark:to-[oklch(0.13_0.02_55)]">
-                            <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-orange-500/5 group-hover:from-amber-500/15 group-hover:to-orange-500/10 transition-colors" />
-                            <CardContent className="p-4 relative">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-xl font-bold text-gray-900 dark:text-white">
-                                            <PenLine className="h-5 w-5 inline" />
-                                        </p>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Journal</p>
+                    <motion.div variants={fadeUp}>
+                        <Link href="/dashboard/journal">
+                            <Card className="group card-3d cursor-pointer overflow-hidden relative border-0 glass-card hover:shadow-xl hover:shadow-amber-500/5 transition-all duration-300">
+                                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-orange-500/5 opacity-60 group-hover:opacity-100 transition-opacity" />
+                                <CardContent className="p-4 sm:p-5 relative">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-xl font-bold text-foreground">
+                                                <PenLine className="h-5 w-5 inline" />
+                                            </p>
+                                            <p className="text-sm text-muted-foreground font-medium mt-0.5">Journal</p>
+                                        </div>
+                                        <div className="p-2.5 rounded-xl bg-amber-100 dark:bg-amber-900/30 group-hover:scale-110 transition-transform duration-300">
+                                            <BookOpen className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                                        </div>
                                     </div>
-                                    <div className="p-2.5 rounded-xl bg-amber-100 dark:bg-amber-900/30">
-                                        <BookOpen className="h-6 w-6 text-amber-600 dark:text-amber-400" />
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </Link>
-                </div>
+                                </CardContent>
+                            </Card>
+                        </Link>
+                    </motion.div>
+                </motion.div>
 
                 {/* Main Content Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     {/* Left Sidebar */}
                     <div className="lg:col-span-4 space-y-6">
                         {/* Today's Habits */}
-                        <Card className="border-0 shadow-sm dark:bg-[oklch(0.15_0.025_265)] animate-fade-in-up">
-                            <CardHeader className="pb-3">
-                                <div className="flex items-center justify-between">
-                                    <CardTitle className="text-base font-semibold" style={{ fontFamily: 'var(--font-heading)' }}>
-                                        Today&apos;s Habits
-                                    </CardTitle>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-20">
-                                            <Progress value={habitProgress} className="h-1.5" />
-                                        </div>
-                                        <Link href="/dashboard/habits">
-                                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
-                                                <ChevronRight className="h-4 w-4" />
-                                            </Button>
-                                        </Link>
-                                    </div>
-                                </div>
-                            </CardHeader>
-                            <CardContent className="space-y-1.5">
-                                {habitsLoading ? (
-                                    Array.from({ length: 3 }).map((_, i) => (
-                                        <Skeleton key={i} className="h-12 rounded-lg" />
-                                    ))
-                                ) : habits && habits.length > 0 ? (
-                                    habits.slice(0, 5).map((habit) => {
-                                        const isCompleted = completedToday.has(habit.id)
-                                        return (
-                                            <div
-                                                key={habit.id}
-                                                className={`
-                                                    flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 cursor-pointer
-                                                    ${isCompleted
-                                                        ? 'bg-emerald-50/80 dark:bg-emerald-900/15 border-emerald-200/60 dark:border-emerald-800/40'
-                                                        : 'hover:bg-gray-50 dark:hover:bg-white/5 border-transparent hover:border-gray-200 dark:hover:border-white/10'
-                                                    }
-                                                `}
-                                                onClick={() => {
-                                                    if (!isCompleted) {
-                                                        completeHabit.mutate({ habitId: habit.id, date: new Date() })
-                                                    } else {
-                                                        removeCompletion.mutate({ habitId: habit.id, date: new Date() })
-                                                    }
-                                                }}
-                                            >
-                                                {isCompleted ? (
-                                                    <CheckCircle2 className="h-5 w-5 text-emerald-500 flex-shrink-0" />
-                                                ) : (
-                                                    <Circle className="h-5 w-5 text-gray-300 dark:text-gray-600 flex-shrink-0" />
-                                                )}
-                                                <span className={`flex-1 text-sm ${isCompleted ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-800 dark:text-gray-200'}`}>
-                                                    {habit.name}
-                                                </span>
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.4, delay: 0.3 }}
+                        >
+                            <Card className="border-0 glass-card">
+                                <CardHeader className="pb-3">
+                                    <div className="flex items-center justify-between">
+                                        <CardTitle className="text-base font-semibold" style={{ fontFamily: 'var(--font-heading)' }}>
+                                            Today&apos;s Habits
+                                        </CardTitle>
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-20">
+                                                <Progress value={habitProgress} className="h-1.5" />
                                             </div>
-                                        )
-                                    })
-                                ) : (
-                                    <div className="text-center py-6 text-gray-400 dark:text-gray-500">
-                                        <Sparkles className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                                        <p className="text-sm">No habits yet</p>
-                                        <Link href="/dashboard/habits">
-                                            <Button variant="link" size="sm" className="mt-1 text-xs">Create one →</Button>
-                                        </Link>
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-
-                        {/* Quick Tasks */}
-                        <Card className="border-0 shadow-sm dark:bg-[oklch(0.15_0.025_265)] animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-                            <CardHeader className="pb-3">
-                                <div className="flex items-center justify-between">
-                                    <CardTitle className="text-base font-semibold" style={{ fontFamily: 'var(--font-heading)' }}>
-                                        Today&apos;s Tasks
-                                    </CardTitle>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-20">
-                                            <Progress value={taskProgress} className="h-1.5" />
+                                            <Link href="/dashboard/habits">
+                                                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 hover:bg-accent/50">
+                                                    <ChevronRight className="h-4 w-4" />
+                                                </Button>
+                                            </Link>
                                         </div>
-                                        <Link href="/dashboard/tasks">
-                                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
-                                                <ChevronRight className="h-4 w-4" />
-                                            </Button>
-                                        </Link>
                                     </div>
-                                </div>
-                            </CardHeader>
-                            <CardContent className="space-y-1.5">
-                                {tasksLoading ? (
-                                    Array.from({ length: 3 }).map((_, i) => (
-                                        <Skeleton key={i} className="h-12 rounded-lg" />
-                                    ))
-                                ) : tasks && tasks.length > 0 ? (
-                                    tasks.slice(0, 5).map((task) => {
-                                        const isCompleted = task.status === 'completed'
-                                        return (
-                                            <div
-                                                key={task.id}
-                                                className={`
-                                                    flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 cursor-pointer
-                                                    ${isCompleted
-                                                        ? 'bg-blue-50/80 dark:bg-blue-900/10 border-blue-200/60 dark:border-blue-800/30'
-                                                        : 'hover:bg-gray-50 dark:hover:bg-white/5 border-transparent hover:border-gray-200 dark:hover:border-white/10'
-                                                    }
-                                                `}
-                                                onClick={() => toggleTask.mutate({ id: task.id })}
-                                            >
-                                                <div className={`
-                                                    flex items-center justify-center w-5 h-5 rounded-full border-2 transition-all flex-shrink-0
-                                                    ${isCompleted
-                                                        ? 'bg-blue-500 border-blue-500 text-white'
-                                                        : 'border-gray-300 dark:border-gray-600 hover:border-blue-400'
-                                                    }
-                                                `}>
-                                                    {isCompleted && <CheckCircle2 className="h-3 w-3" />}
-                                                </div>
-                                                <span className={`flex-1 text-sm ${isCompleted ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-800 dark:text-gray-200'} truncate`}>
-                                                    {task.title}
-                                                </span>
-                                                <Badge
-                                                    variant="secondary"
-                                                    className={`text-[10px] px-1.5 py-0 font-medium ${task.priority === 'high'
-                                                            ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                                                            : task.priority === 'medium'
-                                                                ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-                                                                : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-                                                        }`}
+                                </CardHeader>
+                                <CardContent className="space-y-1.5">
+                                    {habitsLoading ? (
+                                        Array.from({ length: 3 }).map((_, i) => (
+                                            <Skeleton key={i} className="h-12 rounded-xl" />
+                                        ))
+                                    ) : habits && habits.length > 0 ? (
+                                        habits.slice(0, 5).map((habit) => {
+                                            const isCompleted = completedToday.has(habit.id)
+                                            return (
+                                                <div
+                                                    key={habit.id}
+                                                    className={`
+                                                        flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 cursor-pointer
+                                                        ${isCompleted
+                                                            ? 'bg-emerald-500/8 dark:bg-emerald-500/5 border-emerald-500/20'
+                                                            : 'hover:bg-accent/30 border-transparent hover:border-border/50'
+                                                        }
+                                                    `}
+                                                    onClick={() => {
+                                                        if (!isCompleted) {
+                                                            completeHabit.mutate({ habitId: habit.id, date: new Date() })
+                                                        } else {
+                                                            removeCompletion.mutate({ habitId: habit.id, date: new Date() })
+                                                        }
+                                                    }}
                                                 >
-                                                    {task.priority}
-                                                </Badge>
+                                                    {isCompleted ? (
+                                                        <CheckCircle2 className="h-5 w-5 text-emerald-500 flex-shrink-0" />
+                                                    ) : (
+                                                        <Circle className="h-5 w-5 text-muted-foreground/40 flex-shrink-0" />
+                                                    )}
+                                                    <span className={`flex-1 text-sm ${isCompleted ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
+                                                        {habit.name}
+                                                    </span>
+                                                </div>
+                                            )
+                                        })
+                                    ) : (
+                                        <div className="text-center py-8 text-muted-foreground">
+                                            <Sparkles className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                                            <p className="text-sm">No habits yet</p>
+                                            <Link href="/dashboard/habits">
+                                                <Button variant="link" size="sm" className="mt-1 text-xs">Create one →</Button>
+                                            </Link>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </motion.div>
+
+                        {/* Today's Tasks */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.4, delay: 0.4 }}
+                        >
+                            <Card className="border-0 glass-card">
+                                <CardHeader className="pb-3">
+                                    <div className="flex items-center justify-between">
+                                        <CardTitle className="text-base font-semibold" style={{ fontFamily: 'var(--font-heading)' }}>
+                                            Today&apos;s Tasks
+                                        </CardTitle>
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-20">
+                                                <Progress value={taskProgress} className="h-1.5" />
                                             </div>
-                                        )
-                                    })
-                                ) : (
-                                    <div className="text-center py-6 text-gray-400 dark:text-gray-500">
-                                        <ListTodo className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                                        <p className="text-sm">No tasks for today</p>
-                                        <Link href="/dashboard/tasks">
-                                            <Button variant="link" size="sm" className="mt-1 text-xs">Add one →</Button>
-                                        </Link>
+                                            <Link href="/dashboard/tasks">
+                                                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 hover:bg-accent/50">
+                                                    <ChevronRight className="h-4 w-4" />
+                                                </Button>
+                                            </Link>
+                                        </div>
                                     </div>
-                                )}
-                            </CardContent>
-                        </Card>
+                                </CardHeader>
+                                <CardContent className="space-y-1.5">
+                                    {tasksLoading ? (
+                                        Array.from({ length: 3 }).map((_, i) => (
+                                            <Skeleton key={i} className="h-12 rounded-xl" />
+                                        ))
+                                    ) : tasks && tasks.length > 0 ? (
+                                        tasks.slice(0, 5).map((task) => {
+                                            const isCompleted = task.status === 'completed'
+                                            return (
+                                                <div
+                                                    key={task.id}
+                                                    className={`
+                                                        flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 cursor-pointer
+                                                        ${isCompleted
+                                                            ? 'bg-blue-500/8 dark:bg-blue-500/5 border-blue-500/20'
+                                                            : 'hover:bg-accent/30 border-transparent hover:border-border/50'
+                                                        }
+                                                    `}
+                                                    onClick={() => toggleTask.mutate({ id: task.id })}
+                                                >
+                                                    <div className={`
+                                                        flex items-center justify-center w-5 h-5 rounded-full border-2 transition-all flex-shrink-0
+                                                        ${isCompleted
+                                                            ? 'bg-blue-500 border-blue-500 text-white'
+                                                            : 'border-muted-foreground/30 hover:border-blue-400'
+                                                        }
+                                                    `}>
+                                                        {isCompleted && <CheckCircle2 className="h-3 w-3" />}
+                                                    </div>
+                                                    <span className={`flex-1 text-sm ${isCompleted ? 'line-through text-muted-foreground' : 'text-foreground'} truncate`}>
+                                                        {task.title}
+                                                    </span>
+                                                    <Badge
+                                                        variant="secondary"
+                                                        className={`text-[10px] px-1.5 py-0 font-medium border-0 ${task.priority === 'high'
+                                                            ? 'bg-red-500/10 text-red-600 dark:text-red-400'
+                                                            : task.priority === 'medium'
+                                                                ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                                                                : 'bg-muted text-muted-foreground'
+                                                            }`}
+                                                    >
+                                                        {task.priority}
+                                                    </Badge>
+                                                </div>
+                                            )
+                                        })
+                                    ) : (
+                                        <div className="text-center py-8 text-muted-foreground">
+                                            <ListTodo className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                                            <p className="text-sm">No tasks for today</p>
+                                            <Link href="/dashboard/tasks">
+                                                <Button variant="link" size="sm" className="mt-1 text-xs">Add one →</Button>
+                                            </Link>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </motion.div>
                     </div>
 
                     {/* Right: Calendar */}
                     <div className="lg:col-span-8">
-                        <Card className="h-full border-0 shadow-sm dark:bg-[oklch(0.15_0.025_265)] animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
-                            <CardHeader className="pb-2">
-                                <div className="flex items-center justify-between">
-                                    <CardTitle className="text-base font-semibold flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)' }}>
-                                        <Calendar className="h-4 w-4 text-indigo-500" />
-                                        Calendar
-                                    </CardTitle>
-                                    <Link href="/dashboard/events">
-                                        <Button variant="outline" size="sm" className="text-xs h-8">
-                                            View All Events
-                                        </Button>
-                                    </Link>
-                                </div>
-                            </CardHeader>
-                            <CardContent>
-                                <EventCalendar
-                                    events={calendarEvents}
-                                    onDateClick={handleDateClick}
-                                    onEventClick={handleEventClick}
-                                />
-                            </CardContent>
-                        </Card>
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.4, delay: 0.35 }}
+                        >
+                            <Card className="h-full border-0 glass-card">
+                                <CardHeader className="pb-2">
+                                    <div className="flex items-center justify-between">
+                                        <CardTitle className="text-base font-semibold flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)' }}>
+                                            <Calendar className="h-4 w-4 text-indigo-500" />
+                                            Calendar
+                                        </CardTitle>
+                                        <Link href="/dashboard/events">
+                                            <Button variant="outline" size="sm" className="text-xs h-8 glass border-border/50 hover:bg-accent/50">
+                                                View All Events
+                                            </Button>
+                                        </Link>
+                                    </div>
+                                </CardHeader>
+                                <CardContent>
+                                    <EventCalendar
+                                        events={calendarEvents}
+                                        onDateClick={handleDateClick}
+                                        onEventClick={handleEventClick}
+                                    />
+                                </CardContent>
+                            </Card>
+                        </motion.div>
                     </div>
                 </div>
 
-                {/* AI Floating Button */}
                 <AIFloatingButton />
 
-                {/* Create Event Modal */}
                 <CreateEventModal
                     open={createEventOpen}
                     onOpenChange={setCreateEventOpen}
