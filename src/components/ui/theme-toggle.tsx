@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { Moon, Sun } from 'lucide-react'
 
-type Theme = 'light' | 'dark' | 'crazy'
+type Theme = 'light' | 'dark'
 
 export function ThemeToggle() {
     const [theme, setTheme] = useState<Theme>('light')
@@ -11,7 +12,7 @@ export function ThemeToggle() {
     useEffect(() => {
         setMounted(true)
         const savedTheme = localStorage.getItem('theme') as Theme | null
-        if (savedTheme) {
+        if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark')) {
             setTheme(savedTheme)
             applyTheme(savedTheme)
         } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
@@ -29,16 +30,11 @@ export function ThemeToggle() {
         // Apply new theme
         if (newTheme === 'dark') {
             root.classList.add('dark')
-        } else if (newTheme === 'crazy') {
-            root.classList.add('dark', 'crazy')
         }
     }
 
-    const cycleTheme = () => {
-        const themes: Theme[] = ['light', 'dark', 'crazy']
-        const currentIndex = themes.indexOf(theme)
-        const nextTheme = themes[(currentIndex + 1) % themes.length]
-
+    const toggleTheme = () => {
+        const nextTheme: Theme = theme === 'light' ? 'dark' : 'light'
         setTheme(nextTheme)
         applyTheme(nextTheme)
         localStorage.setItem('theme', nextTheme)
@@ -46,37 +42,24 @@ export function ThemeToggle() {
 
     if (!mounted) {
         return (
-            <button className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                <span className="text-lg">🌙</span>
+            <button className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                <Moon className="h-4 w-4 text-muted-foreground" />
             </button>
         )
     }
 
-    const themeConfig = {
-        light: { icon: '☀️', label: 'Light mode', next: 'Dark mode' },
-        dark: { icon: '🌙', label: 'Dark mode', next: 'Crazy mode' },
-        crazy: { icon: '🎨', label: 'Crazy mode', next: 'Light mode' }
-    }
-
-    const current = themeConfig[theme]
-
     return (
         <button
-            onClick={cycleTheme}
-            className={`
-                relative w-10 h-10 rounded-lg flex items-center justify-center
-                transition-all duration-300 
-                ${theme === 'crazy'
-                    ? 'bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 animate-gradient-x'
-                    : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
-                }
-            `}
-            title={`${current.label} - Click for ${current.next}`}
-            aria-label={`Current theme: ${current.label}. Click to switch to ${current.next}`}
+            onClick={toggleTheme}
+            className="relative w-10 h-10 rounded-lg flex items-center justify-center bg-muted hover:bg-accent transition-all duration-300"
+            title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+            aria-label={`Current theme: ${theme} mode. Click to switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
         >
-            <span className={`text-lg transition-transform duration-300 ${theme === 'crazy' ? 'animate-bounce' : ''}`}>
-                {current.icon}
-            </span>
+            {theme === 'light' ? (
+                <Sun className="h-4 w-4 text-foreground transition-transform duration-300" />
+            ) : (
+                <Moon className="h-4 w-4 text-foreground transition-transform duration-300" />
+            )}
         </button>
     )
 }

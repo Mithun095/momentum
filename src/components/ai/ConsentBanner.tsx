@@ -30,39 +30,39 @@ export function ConsentBanner({ onConsent }: ConsentBannerProps) {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md mx-4 p-6">
+            <div className="bg-card rounded-xl shadow-xl max-w-md mx-4 p-6 border border-border">
                 <div className="text-center mb-6">
-                    <Bot className="h-12 w-12 text-purple-600 mb-4 mx-auto" />
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                    <Bot className="h-12 w-12 text-primary mb-4 mx-auto" />
+                    <h2 className="text-xl font-semibold text-foreground mb-2">
                         Enable AI Assistant
                     </h2>
-                    <p className="text-gray-600 dark:text-gray-400">
+                    <p className="text-muted-foreground">
                         To provide personalized assistance, our AI needs access to your data.
                     </p>
                 </div>
 
-                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 mb-6">
-                    <h3 className="font-medium text-gray-900 dark:text-white mb-2">
+                <div className="bg-muted rounded-lg p-4 mb-6">
+                    <h3 className="font-medium text-foreground mb-2">
                         What the AI can access:
                     </h3>
-                    <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                    <ul className="space-y-2 text-sm text-muted-foreground">
                         <li className="flex items-center gap-2">
-                            <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Your habits and completion history
+                            <CheckCircle2 className="w-4 h-4 text-primary" /> Your habits and completion history
                         </li>
                         <li className="flex items-center gap-2">
-                            <ClipboardList className="w-4 h-4 text-blue-500" /> Your tasks and due dates
+                            <ClipboardList className="w-4 h-4 text-primary" /> Your tasks and due dates
                         </li>
                         <li className="flex items-center gap-2">
-                            <Book className="w-4 h-4 text-purple-500" /> Your journal moods (not full entries)
+                            <Book className="w-4 h-4 text-primary" /> Your journal moods (not full entries)
                         </li>
                         <li className="flex items-center gap-2">
-                            <BarChart2 className="w-4 h-4 text-indigo-500" /> Your productivity statistics
+                            <BarChart2 className="w-4 h-4 text-primary" /> Your productivity statistics
                         </li>
                     </ul>
                 </div>
 
-                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 mb-6">
-                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                <div className="bg-primary/5 border border-primary/10 rounded-lg p-3 mb-6">
+                    <p className="text-sm text-foreground">
                         <strong>Privacy:</strong> The AI can create tasks and habits on your behalf, but all data stays on your account.
                     </p>
                 </div>
@@ -70,19 +70,19 @@ export function ConsentBanner({ onConsent }: ConsentBannerProps) {
                 <div className="flex gap-3">
                     <button
                         onClick={() => handleConsent(false)}
-                        className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                        className="flex-1 px-4 py-2 border border-border rounded-lg text-foreground hover:bg-muted transition-colors"
                     >
                         Not Now
                     </button>
                     <button
                         onClick={() => handleConsent(true)}
-                        className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
+                        className="flex-1 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg font-medium transition-colors"
                     >
                         Enable AI
                     </button>
                 </div>
 
-                <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-4">
+                <p className="text-xs text-muted-foreground text-center mt-4">
                     You can change this anytime in settings
                 </p>
             </div>

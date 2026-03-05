@@ -73,7 +73,7 @@ export function ToolActionCard({ toolCall }: ToolActionCardProps) {
                             <div key={i} className="p-2 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700">
                                 <p className="font-medium text-gray-900 dark:text-white">{s.name}</p>
                                 <p className="text-sm text-gray-500 dark:text-gray-400">{s.description}</p>
-                                <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">{s.reason}</p>
+                                <p className="text-xs text-primary mt-1">{s.reason}</p>
                             </div>
                         ))}
                     </div>

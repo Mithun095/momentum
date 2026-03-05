@@ -227,7 +227,7 @@ export function EditHabitModal({ habit, open, onOpenChange }: EditHabitModalProp
                         <Button
                             type="submit"
                             disabled={updateHabit.isPending}
-                            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                            className="bg-primary hover:bg-primary/90 text-primary-foreground"
                         >
                             {updateHabit.isPending ? 'Saving...' : 'Save Changes'}
                         </Button>

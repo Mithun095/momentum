@@ -42,18 +42,18 @@ export default function ForgotPasswordPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-background flex items-center justify-center p-4">
             <Card className="w-full max-w-md">
                 <CardHeader className="text-center">
                     <Link
                         href="/auth/signin"
-                        className="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 mb-4"
+                        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4"
                     >
                         <ArrowLeft className="h-4 w-4" />
                         Back to Sign In
                     </Link>
-                    <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                        <Mail className="h-8 w-8 text-white" />
+                    <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <Mail className="h-8 w-8 text-primary-foreground" />
                     </div>
                     <CardTitle className="text-2xl">Forgot Password?</CardTitle>
                     <CardDescription>
@@ -67,10 +67,10 @@ export default function ForgotPasswordPage() {
                             <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-400" />
                             </div>
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                            <h3 className="text-lg font-semibold text-foreground mb-2">
                                 Check your email
                             </h3>
-                            <p className="text-gray-600 dark:text-gray-400 mb-6">
+                            <p className="text-muted-foreground mb-6">
                                 We've sent password reset instructions to <strong>{email}</strong>
                             </p>
                             <div className="space-y-3">
@@ -85,7 +85,7 @@ export default function ForgotPasswordPage() {
                                     Try another email
                                 </Button>
                                 <Link href="/auth/signin">
-                                    <Button className="w-full bg-gradient-to-r from-indigo-600 to-purple-600">
+                                    <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
                                         Return to Sign In
                                     </Button>
                                 </Link>
@@ -107,7 +107,7 @@ export default function ForgotPasswordPage() {
 
                             <Button
                                 type="submit"
-                                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+                                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
                                 disabled={isLoading}
                             >
                                 {isLoading ? (
@@ -120,9 +120,9 @@ export default function ForgotPasswordPage() {
                                 )}
                             </Button>
 
-                            <p className="text-center text-sm text-gray-500">
+                            <p className="text-center text-sm text-muted-foreground">
                                 Remember your password?{' '}
-                                <Link href="/auth/signin" className="text-indigo-600 hover:underline">
+                                <Link href="/auth/signin" className="text-primary hover:underline">
                                     Sign in
                                 </Link>
                             </p>

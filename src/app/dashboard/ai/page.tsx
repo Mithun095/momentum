@@ -47,13 +47,13 @@ function ChatMessage({ message }: { message: MessageWithMetadata }) {
     return (
         <div className={`flex gap-3 ${isUser ? 'flex-row-reverse' : ''}`}>
             <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${isUser
-                ? 'bg-gray-800 dark:bg-gray-200'
-                : 'bg-gradient-to-br from-violet-500 to-purple-600'
+                ? 'bg-foreground'
+                : 'bg-primary'
                 }`}>
                 {isUser ? (
-                    <User className="h-4 w-4 text-white dark:text-gray-800" />
+                    <User className="h-4 w-4 text-background" />
                 ) : (
-                    <Bot className="h-4 w-4 text-white" />
+                    <Bot className="h-4 w-4 text-primary-foreground" />
                 )}
             </div>
             <div className={`flex-1 max-w-[80%] ${isUser ? 'text-right' : ''}`}>
@@ -68,14 +68,14 @@ function ChatMessage({ message }: { message: MessageWithMetadata }) {
 
                 {/* Message content */}
                 <div className={`inline-block rounded-2xl px-4 py-2 ${isUser
-                    ? 'bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-800 rounded-tr-sm'
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-tl-sm'
+                    ? 'bg-foreground text-background rounded-tr-sm'
+                    : 'bg-muted text-foreground rounded-tl-sm'
                     }`}>
                     <div className="prose prose-sm dark:prose-invert max-w-none">
                         <ReactMarkdown>{message.content}</ReactMarkdown>
                     </div>
                 </div>
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                     {format(new Date(message.createdAt), 'h:mm a')}
                 </p>
             </div>
@@ -98,11 +98,11 @@ function ConversationList({
     onDelete: (id: string) => void;
 }) {
     return (
-        <div className="w-64 border-r border-gray-200 dark:border-gray-700 flex flex-col h-full">
-            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="w-64 border-r border-border flex flex-col h-full">
+            <div className="p-4 border-b border-border">
                 <Button
                     onClick={onNew}
-                    className="w-full bg-gray-800 hover:bg-gray-700 dark:bg-gray-200 dark:hover:bg-gray-300 dark:text-gray-900"
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
                 >
                     <Plus className="h-4 w-4 mr-2" />
                     New Chat
@@ -110,7 +110,7 @@ function ConversationList({
             </div>
             <div className="flex-1 overflow-y-auto">
                 {conversations.length === 0 ? (
-                    <div className="p-4 text-center text-gray-500 dark:text-gray-400 text-sm">
+                    <div className="p-4 text-center text-muted-foreground text-sm">
                         No conversations yet
                     </div>
                 ) : (
@@ -119,25 +119,25 @@ function ConversationList({
                             <div
                                 key={conv.id}
                                 className={`group flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-colors ${activeId === conv.id
-                                    ? 'bg-gray-100 dark:bg-gray-800'
-                                    : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                                    ? 'bg-muted'
+                                    : 'hover:bg-muted/50'
                                     }`}
                                 onClick={() => onSelect(conv.id)}
                             >
-                                <MessageSquare className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                                <MessageSquare className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-sm text-gray-900 dark:text-gray-100 truncate">
+                                    <p className="text-sm text-foreground truncate">
                                         {conv.title}
                                     </p>
-                                    <p className="text-xs text-gray-500">
+                                    <p className="text-xs text-muted-foreground">
                                         {format(new Date(conv.updatedAt), 'MMM d')}
                                     </p>
                                 </div>
                                 <button
                                     onClick={(e) => { e.stopPropagation(); onDelete(conv.id); }}
-                                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-opacity"
+                                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-muted rounded transition-opacity"
                                 >
-                                    <Trash2 className="h-3 w-3 text-gray-400" />
+                                    <Trash2 className="h-3 w-3 text-muted-foreground" />
                                 </button>
                             </div>
                         ))}
@@ -163,7 +163,7 @@ function QuickSuggestions({ onSelect }: { onSelect: (text: string) => void }) {
                 <button
                     key={i}
                     onClick={() => onSelect(s)}
-                    className="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                    className="px-3 py-1.5 text-sm bg-muted text-muted-foreground rounded-full hover:bg-accent transition-colors"
                 >
                     {s}
                 </button>
@@ -226,7 +226,7 @@ export default function AiAssistantPage() {
             if (data.toolCalls && data.toolCalls.length > 0) {
                 const toolNames = data.toolCalls.map(t => t.name).join(', ')
                 toast({
-                    title: '✨ AI Action Completed',
+                    title: 'AI Action Completed',
                     description: `Actions performed: ${toolNames}`
                 })
             }
@@ -320,14 +320,16 @@ export default function AiAssistantPage() {
     // If consent denied, show limited UI
     if (hasConsent === false) {
         return (
-            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <Card className="max-w-md mx-4">
                     <CardContent className="p-8 text-center">
-                        <div className="text-4xl mb-4">🔒</div>
-                        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                        <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+                            <AlertCircle className="h-6 w-6 text-muted-foreground" />
+                        </div>
+                        <h2 className="text-xl font-semibold text-foreground mb-2">
                             AI Assistant Disabled
                         </h2>
-                        <p className="text-gray-600 dark:text-gray-400 mb-4">
+                        <p className="text-muted-foreground mb-4">
                             Enable AI access to use the personal assistant features.
                         </p>
                         <div className="flex gap-3 justify-center">
@@ -354,14 +356,14 @@ export default function AiAssistantPage() {
 
     if (!aiStatus?.available) {
         return (
-            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <Card className="max-w-md mx-4">
                     <CardContent className="p-8 text-center">
-                        <AlertCircle className="h-12 w-12 mx-auto text-amber-500 mb-4" />
-                        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                        <AlertCircle className="h-12 w-12 mx-auto text-primary mb-4" />
+                        <h2 className="text-xl font-semibold text-foreground mb-2">
                             AI Assistant Not Available
                         </h2>
-                        <p className="text-gray-600 dark:text-gray-400 mb-4">
+                        <p className="text-muted-foreground mb-4">
                             The AI service is not configured. Please set GEMINI_API_KEY in your environment.
                         </p>
                         <DebugInfo />
@@ -378,7 +380,7 @@ export default function AiAssistantPage() {
         const { data: debug } = api.ai.debugEnv.useQuery()
         if (!debug) return null
         return (
-            <div className="mt-4 p-2 bg-gray-100 dark:bg-gray-800 rounded text-xs text-left font-mono mb-4">
+            <div className="mt-4 p-2 bg-muted rounded text-xs text-left font-mono mb-4">
                 <p>Key Present: {debug.hasKey ? 'Yes' : 'No'}</p>
                 <p>Key Length: {debug.keyLength}</p>
                 <p>Start: {debug.keyStart}...</p>
@@ -389,23 +391,23 @@ export default function AiAssistantPage() {
     }
 
     return (
-        <div className="h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
+        <div className="h-screen bg-background flex flex-col">
             {/* Top Navigation */}
-            <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+            <nav className="bg-card border-b border-border flex-shrink-0">
                 <div className="px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
                         <div className="flex items-center gap-4">
-                            <a href="/dashboard" className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                            <a href="/dashboard" className="text-muted-foreground hover:text-foreground transition-colors">
                                 ← Dashboard
                             </a>
                             <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
-                                    <Sparkles className="h-4 w-4 text-white" />
+                                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                                    <Sparkles className="h-4 w-4 text-primary-foreground" />
                                 </div>
-                                <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                                <h1 className="text-xl font-semibold text-foreground">
                                     Momentum AI
                                 </h1>
-                                <span className="px-2 py-0.5 text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full">
+                                <span className="px-2 py-0.5 text-xs bg-primary/10 text-primary rounded-full font-medium">
                                     With Tools
                                 </span>
                             </div>
@@ -428,46 +430,42 @@ export default function AiAssistantPage() {
                 </div>
 
                 {/* Chat Area */}
-                <div className="flex-1 flex flex-col bg-white dark:bg-gray-900">
+                <div className="flex-1 flex flex-col bg-background">
                     {!activeConversationId ? (
                         // No conversation selected - Welcome screen
                         <div className="flex-1 flex items-center justify-center">
                             <div className="text-center max-w-md px-4">
-                                <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
-                                    <Sparkles className="h-8 w-8 text-white" />
+                                <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-primary flex items-center justify-center">
+                                    <Sparkles className="h-8 w-8 text-primary-foreground" />
                                 </div>
-                                <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                                <h2 className="text-2xl font-semibold text-foreground mb-2">
                                     Welcome to Momentum AI
                                 </h2>
-                                <p className="text-gray-600 dark:text-gray-400 mb-4">
+                                <p className="text-muted-foreground mb-4">
                                     Your AI assistant can now <strong>take actions</strong> on your behalf:
                                 </p>
                                 <div className="grid grid-cols-2 gap-3 text-sm text-left mb-6">
-                                    <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                                        <span className="text-lg">📋</span>
-                                        <p className="font-medium">Create Tasks</p>
-                                        <p className="text-gray-500 text-xs">"Remind me to call Mom tomorrow"</p>
+                                    <div className="p-3 bg-muted rounded-lg">
+                                        <p className="font-medium text-foreground">Create Tasks</p>
+                                        <p className="text-muted-foreground text-xs">"Remind me to call Mom tomorrow"</p>
                                     </div>
-                                    <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                                        <span className="text-lg">✅</span>
-                                        <p className="font-medium">Start Habits</p>
-                                        <p className="text-gray-500 text-xs">"I want to meditate daily"</p>
+                                    <div className="p-3 bg-muted rounded-lg">
+                                        <p className="font-medium text-foreground">Start Habits</p>
+                                        <p className="text-muted-foreground text-xs">"I want to meditate daily"</p>
                                     </div>
-                                    <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                                        <span className="text-lg">💡</span>
-                                        <p className="font-medium">Get Suggestions</p>
-                                        <p className="text-gray-500 text-xs">"What habits should I try?"</p>
+                                    <div className="p-3 bg-muted rounded-lg">
+                                        <p className="font-medium text-foreground">Get Suggestions</p>
+                                        <p className="text-muted-foreground text-xs">"What habits should I try?"</p>
                                     </div>
-                                    <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                                        <span className="text-lg">📊</span>
-                                        <p className="font-medium">View Insights</p>
-                                        <p className="text-gray-500 text-xs">"How am I doing this week?"</p>
+                                    <div className="p-3 bg-muted rounded-lg">
+                                        <p className="font-medium text-foreground">View Insights</p>
+                                        <p className="text-muted-foreground text-xs">"How am I doing this week?"</p>
                                     </div>
                                 </div>
                                 <Button
                                     onClick={handleNewConversation}
                                     disabled={isCreatingConversation}
-                                    className="bg-gray-800 hover:bg-gray-700 dark:bg-gray-200 dark:hover:bg-gray-300 dark:text-gray-900"
+                                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
                                 >
                                     {isCreatingConversation ? (
                                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -484,7 +482,7 @@ export default function AiAssistantPage() {
                             <div className="flex-1 overflow-y-auto p-4 space-y-4">
                                 {activeConversation?.messages.length === 0 ? (
                                     <div className="flex flex-col items-center justify-center h-full">
-                                        <p className="text-gray-500 dark:text-gray-400 mb-4">
+                                        <p className="text-muted-foreground mb-4">
                                             Try asking me to do something!
                                         </p>
                                         <QuickSuggestions onSelect={(text) => {
@@ -504,13 +502,13 @@ export default function AiAssistantPage() {
                                 )}
                                 {sendMessageMutation.isPending && (
                                     <div className="flex gap-3">
-                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
-                                            <Bot className="h-4 w-4 text-white" />
+                                        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                                            <Bot className="h-4 w-4 text-primary-foreground" />
                                         </div>
-                                        <div className="bg-gray-100 dark:bg-gray-800 rounded-2xl rounded-tl-sm px-4 py-2">
+                                        <div className="bg-muted rounded-2xl rounded-tl-sm px-4 py-2">
                                             <div className="flex items-center gap-2">
-                                                <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
-                                                <span className="text-sm text-gray-500">Thinking...</span>
+                                                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                                                <span className="text-sm text-muted-foreground">Thinking...</span>
                                             </div>
                                         </div>
                                     </div>
@@ -519,7 +517,7 @@ export default function AiAssistantPage() {
                             </div>
 
                             {/* Input */}
-                            <div className="border-t border-gray-200 dark:border-gray-700 p-4">
+                            <div className="border-t border-border p-4">
                                 <div className="flex gap-2">
                                     <textarea
                                         value={inputMessage}
@@ -527,18 +525,18 @@ export default function AiAssistantPage() {
                                         onKeyDown={handleKeyDown}
                                         placeholder="Ask me to create a task, suggest habits, or show your progress..."
                                         rows={1}
-                                        className="flex-1 px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none"
+                                        className="flex-1 px-4 py-3 rounded-xl border border-border bg-muted text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                                         disabled={sendMessageMutation.isPending}
                                     />
                                     <Button
                                         onClick={() => handleSendMessage()}
                                         disabled={!inputMessage.trim() || sendMessageMutation.isPending}
-                                        className="px-4 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700"
+                                        className="px-4 bg-primary hover:bg-primary/90 text-primary-foreground"
                                     >
                                         <Send className="h-4 w-4" />
                                     </Button>
                                 </div>
-                                <p className="text-xs text-gray-400 mt-2 text-center">
+                                <p className="text-xs text-muted-foreground mt-2 text-center">
                                     Press Enter to send
                                 </p>
                             </div>

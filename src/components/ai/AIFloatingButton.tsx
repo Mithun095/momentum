@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Sparkles, MessageCircle } from 'lucide-react'
+import { Sparkles } from 'lucide-react'
 import { useState } from 'react'
 
 export function AIFloatingButton() {
@@ -16,11 +16,11 @@ export function AIFloatingButton() {
         >
             <div className={`
                 flex items-center gap-2 px-4 py-3 
-                bg-gradient-to-r from-purple-600 to-indigo-600 
-                hover:from-purple-700 hover:to-indigo-700
-                text-white font-medium rounded-full shadow-lg
+                bg-primary
+                hover:bg-primary/90
+                text-primary-foreground font-medium rounded-full shadow-lg
                 transition-all duration-300 ease-out
-                hover:shadow-xl hover:shadow-purple-500/30
+                hover:shadow-xl hover:shadow-primary/25
                 ${isHovered ? 'pr-5' : 'pr-3'}
             `}>
                 <div className="relative">
@@ -36,7 +36,7 @@ export function AIFloatingButton() {
             </div>
 
             {/* Subtle glow effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full blur-xl opacity-30 group-hover:opacity-50 transition-opacity -z-10" />
+            <div className="absolute inset-0 bg-primary rounded-full blur-xl opacity-30 group-hover:opacity-50 transition-opacity -z-10" />
         </Link>
     )
 }

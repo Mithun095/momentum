@@ -59,7 +59,7 @@ export function StreakDisplay({ completions, className, size = 'md' }: StreakDis
             <CardContent className="space-y-4">
                 {/* Current Streak */}
                 <div className="text-center">
-                    <div className={cn('font-bold bg-gradient-to-r from-orange-500 to-red-600 bg-clip-text text-transparent', sizeClasses[size].number)}>
+                    <div className={cn('font-bold bg-gradient-to-r from-amber-500 to-yellow-500 bg-clip-text text-transparent', sizeClasses[size].number)}>
                         {currentStreak}
                     </div>
                     <p className={cn('text-gray-600 dark:text-gray-400 mt-1', sizeClasses[size].text)}>
@@ -91,7 +91,7 @@ export function StreakDisplay({ completions, className, size = 'md' }: StreakDis
                         </div>
                         <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                             <div
-                                className="h-full bg-gradient-to-r from-orange-500 to-red-600 transition-all duration-300"
+                                className="h-full bg-gradient-to-r from-amber-500 to-yellow-500 transition-all duration-300"
                                 style={{
                                     width: `${Math.min(
                                         100,
